@@ -1,0 +1,5 @@
+segpy is provided by a third party, which is available at https://github.com/sixty-north/segpy.
+In version 2.0.4 or higher, some functions are removed by the developers, causing incompatibility, which is the major motivation of storing the previous version as a local copy.
+Version 2.0.2 is used in geopy for segy data i/o.
+All credits go to the author(s) of the package segpy
+
