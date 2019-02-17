@@ -1,0 +1,8 @@
+Here is the list of the dependency for running GeoPy, including,
+
+PyQt5
+os
+sys
+numpy
+scipy
+matplotlib
