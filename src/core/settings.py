@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -25,7 +26,7 @@ General['RootPath'] = os.path.dirname(__file__)[:-15]
 Visual = {}
 Visual['Font'] = {}
 Visual['Font']['Name'] = 'Times New Roman'
-Visual['Font']['Color'] = 'Black'
+Visual['Font']['Color'] = 'Green'
 Visual['Font']['Style'] = 'Normal'
 Visual['Font']['Weight'] = 'Normal'
 Visual['Font']['Size'] = 16
