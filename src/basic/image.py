@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -87,9 +88,9 @@ def rotateImage(image, image_height, image_width, flag='180'):
     if np.ndim(image) != 2:
         print('ERROR in rotateImage: 2D image matrix expected')
         sys.exit()
-    if image_height <= 1 or image_width <= 1:
-        print('ERROR in rotateImage: Original image height/width be > 1')
-        sys.exit()
+    # if image_height <= 1 or image_width <= 1:
+    #     print('ERROR in rotateImage: Original image height/width be > 1')
+    #     sys.exit()
     nimage, npixel = np.shape(image)
     if npixel != image_height * image_width:
         print('ERROR in rotateImage: Image height/width not match')
