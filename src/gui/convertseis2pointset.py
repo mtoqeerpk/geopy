@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -188,7 +189,7 @@ class convertseis2pointset(object):
         #
         self.lblattrib.setText(_translate("ConvertSeis2PointSet", "Select properties:"))
         #
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _survinfo = self.survinfo
             self.ldtinlstart.setText(_translate("ConvertSeis2PointSet", str(_survinfo['ILStart'])))
             self.ldtinlend.setText(_translate("ConvertSeis2PointSet", str(_survinfo['ILEnd'])))
@@ -201,9 +202,10 @@ class convertseis2pointset(object):
             self.ldtzstep.setText(_translate("ConvertSeis2PointSet", str(_survinfo['ZStep'])))
             #
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgattrib)
-                item.setText(i)
-                self.lwgattrib.addItem(item)
+                if self.checkSeisData(i):
+                    item = QtWidgets.QListWidgetItem(self.lwgattrib)
+                    item.setText(i)
+                    self.lwgattrib.addItem(item)
             # self.lwgattrib.selectAll()
         #
         self.lblsave.setText(_translate("ConvertSeis2PointSet", "Save as"))
@@ -234,7 +236,7 @@ class convertseis2pointset(object):
             self.cbbxlitvl.setEnabled(False)
             self.cbbzitvl.setEnabled(False)
             #
-            if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+            if self.checkSurvInfo() is True:
                 _survinfo = self.survinfo
                 self.ldtinlstart.setText(str(_survinfo['ILStart']))
                 self.ldtinlend.setText(str(_survinfo['ILEnd']))
@@ -275,7 +277,7 @@ class convertseis2pointset(object):
             if reply == QtWidgets.QMessageBox.No:
                 return
         #
-        if (self.checkSurvInfo() is False) or (self.checkSeisData() is False):
+        if self.checkSurvInfo() is False:
             print("ConvertSeis2PointSet: No seismic survey found")
             QtWidgets.QMessageBox.critical(self.msgbox,
                                            'Convert Seismic to PointSet',
@@ -368,7 +370,7 @@ class convertseis2pointset(object):
         # Progress dialog
         _pgsdlg = QtWidgets.QProgressDialog()
         icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/point.png")),
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/seismic.png")),
                        QtGui.QIcon.Normal, QtGui.QIcon.Off)
         _pgsdlg.setWindowIcon(icon)
         _pgsdlg.setWindowTitle('Retrieve ' + str(len(_proplist)) + ' Property(s)')
@@ -396,7 +398,7 @@ class convertseis2pointset(object):
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Convert Seismic to PointSet",
-                                          str(len(_pts)) + " points imported successfully")
+                                          str(len(_pts)) + " seismic converted successfully")
 
     def refreshMsgBox(self):
         _center_x = self.dialog.geometry().center().x()
@@ -415,17 +417,10 @@ class convertseis2pointset(object):
             return False
         return True
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ConvertSeis2PointSet: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Convert Seismic to PointSet',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":

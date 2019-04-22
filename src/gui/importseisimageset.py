@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -225,49 +225,27 @@ class importseisimageset(object):
                                                         qpgsdlg=_pgsdlg
                                                         )
         _seisdata = {}
-        _seisdata[self.ldtsave.text()] = np.reshape(np.transpose(_imagedata, [2, 1, 0]), [-1, 1])
-        if checkSurvInfo(self.survinfo) \
-                and self.survinfo['ZNum'] == np.shape(_imagedata)[0] \
-                and self.survinfo['XLNum'] == np.shape(_imagedata)[1] \
-                and self.survinfo['ILNum'] == np.shape(_imagedata)[2]:
-            _survinfo = self.survinfo
-        else:
-            _survinfo = seis_ays.createSeisInfoFrom3DMat(_imagedata)
+        _survinfo = seis_ays.createSeisInfoFrom3DMat(_imagedata)
+        _imagedata = np.reshape(np.transpose(_imagedata, [2, 1, 0]), [-1, 1])
+        if checkSeisData(_imagedata, _survinfo):
+            _seisdata[self.ldtsave.text()] = _imagedata
         #
         # add new data to seisdata
-        if checkSurvInfo(self.survinfo) is False:
-            self.seisdata = _seisdata
+        if checkSurvInfo(_survinfo):
             self.survinfo = _survinfo
-        else:
-            if checkSurvInfo(_survinfo) \
-                    and np.array_equal(self.survinfo['ILRange'], _survinfo['ILRange']) \
-                    and np.array_equal(self.survinfo['XLRange'], _survinfo['XLRange']) \
-                    and np.array_equal(self.survinfo['ZRange'], _survinfo['ZRange']):
-                for key in _seisdata.keys():
-                    if key in self.seisdata.keys():
-                        reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic ImageSet',
-                                                               key + ' already exists. Overwrite?',
-                                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                               QtWidgets.QMessageBox.No)
-                        if reply == QtWidgets.QMessageBox.No:
-                            return
-                    self.seisdata[key] = _seisdata[key]
-            else:
+        for key in _seisdata.keys():
+            if key in self.seisdata.keys() and checkSeisData(self.seisdata[key], self.survinfo):
                 reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic ImageSet',
-                                                       'Survey does not match with imported seismic. Overwrite?',
+                                                       key + ' already exists. Overwrite?',
                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                        QtWidgets.QMessageBox.No)
                 if reply == QtWidgets.QMessageBox.No:
                     return
-                self.seisdata = _seisdata
-                self.survinfo = _survinfo
-        #
-        self.checkSurvInfo()
-        self.checkSeisData()
+            self.seisdata[key] = _seisdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import Seismic ImageSet",
-                                          str(_nimage) + " image(s) imported as ImageSet successfully")
+                                          str(_nimage) + " image(s) imported as Seismic successfully")
         return
 
 
@@ -276,36 +254,13 @@ class importseisimageset(object):
         _center_y = self.dialog.geometry().center().y()
         self.msgbox.setGeometry(QtCore.QRect(_center_x - 150, _center_y - 50, 300, 100))
 
-    def checkSurvInfo(self):
-        self.refreshMsgBox()
-        #
-        if checkSurvInfo(self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                            'Import Seismic ImageSet',
-                                            'No survey found')
-            return
-
-    def checkSeisData(self):
-        self.refreshMsgBox()
-        #
-        if checkSeisData(self.seisdata, self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                            'Import Seismic ImageSet',
-                                            'Seismic & survey not match')
-            return
 
 def checkSurvInfo(survinfo):
     return seis_ays.checkSeisInfo(survinfo)
 
-def checkSeisData(seisdata, survinfo={}):
-    if seis_ays.checkSeisInfo(survinfo) is False:
-        return False
-    if seisdata is None:
-        return False
-    for f in seisdata.keys():
-        if np.shape(seisdata[f])[0] != survinfo['SampleNum']:
-            return False
-    return True
+
+def checkSeisData(seisdata, survinfo):
+    return seis_ays.isSeis2DMatConsistentWithSeisInfo(seisdata, survinfo)
 
 
 if __name__ == "__main__":

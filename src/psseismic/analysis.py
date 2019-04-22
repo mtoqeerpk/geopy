@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     January 2019                                                                    #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -10,7 +10,6 @@
 from PyQt5 import QtCore
 import sys
 import numpy as np
-import numpy.matlib as npmat
 
 
 __all__ = ['analysis']
@@ -33,35 +32,56 @@ def checkPsSeis(psseis):
             return False
         if 'ZRange' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceNum' not in psseis[shot]['ShotInfo'].keys():
+        if 'XLNum' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceStart' not in psseis[shot]['ShotInfo'].keys():
+        if 'XLStart' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceEnd' not in psseis[shot]['ShotInfo'].keys():
+        if 'XLEnd' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceStep' not in psseis[shot]['ShotInfo'].keys():
+        if 'XLStep' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceRange' not in psseis[shot]['ShotInfo'].keys():
+        if 'XLRange' not in psseis[shot]['ShotInfo'].keys():
             return False
-        if 'TraceMissing' not in psseis[shot]['ShotInfo'].keys():
+        if 'ILNum' not in psseis[shot]['ShotInfo'].keys():
+            return False
+        if 'ILStart' not in psseis[shot]['ShotInfo'].keys():
+            return False
+        if 'ILEnd' not in psseis[shot]['ShotInfo'].keys():
+            return False
+        if 'ILStep' not in psseis[shot]['ShotInfo'].keys():
+            return False
+        if 'ILRange' not in psseis[shot]['ShotInfo'].keys():
+            return False
+        if 'TraceFlag' not in psseis[shot]['ShotInfo'].keys():
             return False
     #
     return True
 
 
-def createShotInfo(shotdata):
+def createShotInfo(shotdata, zstart=0, zstep=-1, xlstart=0, xlstep=1, inlstart=0, inlstep=1):
     info = {}
-    info['ZNum'] = np.shape(shotdata)[0]
-    info['TraceNum'] = np.shape(shotdata)[1]
-    info['ZStart'] = 0
-    info['ZStep'] = -1
-    info['ZEnd'] = 0 + (info['ZNum'] - 1) * info['ZStep']
+    if np.ndim(shotdata) < 3:
+        print('ERROR in createShotInfo: shot data in 3D matrix')
+        sys.exit()
+    info['ZNum'], info['XLNum'], info['ILNum'] = np.shape(shotdata)
+    info['ZStart'] = zstart
+    info['ZStep'] = zstep
+    info['ZEnd'] = zstart + (info['ZNum'] - 1) * zstep
     info['ZRange'] = np.linspace(info['ZStart'], info['ZEnd'], info['ZNum'])
-    info['TraceStart'] = 0
-    info['TraceStep'] = 1
-    info['TraceEnd'] = 0 + (info['TraceNum'] - 1) * info['TraceStep']
-    info['TraceRange'] = np.linspace(info['TraceStart'], info['TraceEnd'], info['TraceNum'])
-    info['TraceMissing'] = []
+    info['XLStart'] = xlstart
+    info['XLStep'] = xlstep
+    info['XLEnd'] = xlstart + (info['XLNum'] - 1) * xlstep
+    info['XLRange'] = np.linspace(info['XLStart'], info['XLEnd'], info['XLNum'])
+    info['ILStart'] = inlstart
+    info['ILStep'] = inlstep
+    info['ILEnd'] = inlstart + (info['ILNum'] - 1) * inlstep
+    info['ILRange'] = np.linspace(info['ILStart'], info['ILEnd'], info['ILNum'])
+    info['TraceFlag'] = np.zeros([info['XLNum'], info['ILNum']])
+    # check trace flag
+    for i in range(info['ILNum']):
+        for j in range(info['XLNum']):
+            if np.min(shotdata[:, j, i]) >= np.max(shotdata[:, j, i]):
+                info['TraceFlag'][j, i] = 1
     #
     return info
 

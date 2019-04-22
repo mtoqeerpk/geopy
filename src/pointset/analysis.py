@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -25,5 +26,17 @@ def checkPoint(point):
     return True
 
 
+def checkPointSet(pointset):
+    if pointset is None or len(pointset.keys()) < 1:
+        return False
+    for p in pointset.keys():
+        if pointset[p] is None:
+            return False
+        if checkPoint(pointset[p]) is False:
+            return False
+    return True
+
+
 class analysis:
     checkPoint = checkPoint
+    checkPointSet = checkPointSet

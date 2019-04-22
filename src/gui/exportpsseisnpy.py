@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -87,9 +88,9 @@ class exportpsseisnpy(object):
                 self.lwgpsseis.addItem(item)
             self.lwgpsseis.selectAll()
         self.lbltype.setText(_translate("ExportPsSeisNpy", "Select output type:"))
-        self.cbbtype.addItems(['Dictionary', '2D numpy matrix'])
+        self.cbbtype.addItems(['Dictionary', '3D numpy matrix'])
         self.cbbtype.setItemIcon(0, QtGui.QIcon(os.path.join(self.iconpath, "icons/pydict.png")))
-        self.cbbtype.setItemIcon(1, QtGui.QIcon(os.path.join(self.iconpath, "icons/py2dmat.png")))
+        self.cbbtype.setItemIcon(1, QtGui.QIcon(os.path.join(self.iconpath, "icons/vis3d.png")))
         self.lblsave.setText(_translate("ExportPsSeisNpy", "Save as:"))
         self.ldtsave.setText(_translate("ExportPsSeisNpy", ""))
         self.btnsave.setText(_translate("ExportPsSeisNpy", "Browse"))

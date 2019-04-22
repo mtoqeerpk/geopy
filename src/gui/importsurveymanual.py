@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -156,11 +157,11 @@ class importsurveymanual(object):
                                            'Create Survey',
                                            'Zero survey dimension')
             return
-        if _inlstep <= 0 or _xlstep <= 0 or _zstep <= 0:
+        if _inlstep <= 0 or _xlstep <= 0 or _zstep == 0:
             print("ImportSurveyManual: Zero survey step")
             QtWidgets.QMessageBox.critical(self.msgbox,
                                            'Create Survey',
-                                           'Zero survey steo')
+                                           'Zero survey step')
             return
         #
         self.survinfo = seis_ays.createSeisInfoFrom3DMat(seis3dmat=np.zeros([_znum, _xlnum, _inlnum]),

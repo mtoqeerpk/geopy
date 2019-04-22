@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -29,7 +30,7 @@ class calcmathattribsingle(object):
     iconpath = os.path.dirname(__file__)
     dialog = None
     #
-    mathattriblist = ['Calculator', 'Cumulative sum']
+    mathattriblist = ['Calculator', 'Cumulative sum', 'First derivative (with z)']
 
 
     def setupGUI(self, CalcMathAttribSingle):
@@ -101,6 +102,8 @@ class calcmathattribsingle(object):
             self.ldtname.setText('Calculator')
         if self.cbbattrib.currentIndex() == 1:
             self.ldtname.setText('CuSum')
+        if self.cbbattrib.currentIndex() == 2:
+            self.ldtname.setText('dZ')
 
 
     def clickBtnCalcMathAttribSingle(self):
@@ -139,9 +142,15 @@ class calcmathattribsingle(object):
             self.seisdata[self.ldtname.text()] = _gui.data.copy()
             _math.show()
         if self.cbbattrib.currentIndex() == 1:
-            _attrib = seis_attrib.calcSeisCuSum(np.transpose(np.reshape(_seisdata, [self.survinfo['ILNum'],
+            _attrib = seis_attrib.calcCumulativeSum(np.transpose(np.reshape(_seisdata, [self.survinfo['ILNum'],
                                                                                     self.survinfo['XLNum'],
                                                                                     self.survinfo['ZNum']]), [2, 1, 0]))
+            self.seisdata[self.ldtname.text()] = np.reshape(np.transpose(_attrib, [2, 1, 0]), [-1, 1])
+        if self.cbbattrib.currentIndex() == 2:
+            _attrib = seis_attrib.calcFirstDerivative(np.transpose(np.reshape(_seisdata, [self.survinfo['ILNum'],
+                                                                                         self.survinfo['XLNum'],
+                                                                                         self.survinfo['ZNum']]),
+                                                                  [2, 1, 0]))
             self.seisdata[self.ldtname.text()] = np.reshape(np.transpose(_attrib, [2, 1, 0]), [-1, 1])
         #
         self.refreshLwgProperty()
@@ -154,11 +163,12 @@ class calcmathattribsingle(object):
 
     def refreshLwgProperty(self):
         self.lwgproperty.clear()
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgproperty)
-                item.setText(i)
-                self.lwgproperty.addItem(item)
+                if self.checkSeisData(i) is True:
+                    item = QtWidgets.QListWidgetItem(self.lwgproperty)
+                    item.setText(i)
+                    self.lwgproperty.addItem(item)
 
 
     def refreshMsgBox(self):
@@ -178,17 +188,10 @@ class calcmathattribsingle(object):
             return False
         return True
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("CalcMathAttribSingle: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Calculate Math Attribute from Single Property',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":

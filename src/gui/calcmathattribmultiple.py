@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -12,6 +13,7 @@ import numpy as np
 import os, sys
 #
 sys.path.append(os.path.dirname(__file__)[:-4])
+from seismic.analysis import analysis as seis_ays
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
@@ -19,6 +21,7 @@ QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_UseHighDpiPixmaps, True)
 
 class calcmathattribmultiple(object):
 
+    survinfo = {}
     seisdata = {}
     rootpath = ''
     #
@@ -163,11 +166,12 @@ class calcmathattribmultiple(object):
 
     def refreshLwgProperty(self, lwgproperty):
         lwgproperty.clear()
-        if self.checkSeisData() is True:
+        if self.checkSurvInfo() is True:
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(lwgproperty)
-                item.setText(i)
-                lwgproperty.addItem(item)
+                if self.checkSeisData(i) is True:
+                    item = QtWidgets.QListWidgetItem(lwgproperty)
+                    item.setText(i)
+                    lwgproperty.addItem(item)
 
 
     def refreshMsgBox(self):
@@ -176,16 +180,22 @@ class calcmathattribmultiple(object):
         self.msgbox.setGeometry(QtCore.QRect(_center_x - 150, _center_y - 50, 300, 100))
 
 
-    def checkSeisData(self):
+    def checkSurvInfo(self):
         self.refreshMsgBox()
         #
-        if len(self.seisdata.keys()) < 1:
-                # print("CalcMathAttribMultiple: Seismic not found")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Calculate Math Attribute between Properties',
-                #                                'Seismic not found')
-                return False
+        if seis_ays.checkSeisInfo(self.survinfo) is False:
+            # print("CalcMathAttribSingle: Survey not found")
+            # QtWidgets.QMessageBox.critical(self.msgbox,
+            #                                'Calculate Math Attribute from Single Property',
+            #                                'Survey not found')
+            return False
         return True
+
+
+    def checkSeisData(self, f):
+        self.refreshMsgBox()
+        #
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":

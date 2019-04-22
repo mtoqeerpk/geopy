@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -13,6 +14,7 @@ import sys, os
 #
 sys.path.append(os.path.dirname(__file__)[:-4])
 from pointset.inputoutput import inputoutput as point_io
+from pointset.analysis import analysis as point_ays
 
 
 QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling, True)
@@ -258,20 +260,15 @@ class importpointsetfile(object):
             #
         #
         # add new data to seisdata
-        if checkPointData(self.pointdata) is False:
-            self.pointdata = _pointdata
-        else:
-            for key in _pointdata.keys():
-                if key in self.pointdata.keys():
-                    reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import PointSet NumPy',
-                                                           key + ' already exists. Overwrite?',
-                                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-                    if reply == QtWidgets.QMessageBox.No:
-                        return
-                self.pointdata[key] = _pointdata[key]
-        #
-        self.checkPointData()
+        for key in _pointdata.keys():
+            if key in self.pointdata.keys() and checkPointData(self.pointdata[key]):
+                reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import PointSet NumPy',
+                                                       key + ' already exists. Overwrite?',
+                                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.No:
+                    return
+            self.pointdata[key] = _pointdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import PointSet from File",
@@ -285,27 +282,8 @@ class importpointsetfile(object):
         self.msgbox.setGeometry(QtCore.QRect(_center_x - 150, _center_y - 50, 300, 100))
 
 
-    def checkPointData(self):
-        if checkPointData(self.pointdata) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'Import PointSet from File',
-                                           'No point found')
-            return
-
-
 def checkPointData(pointdata):
-    if pointdata is None:
-        return False
-    for p in pointdata.keys():
-        if pointdata[p] is None:
-            return False
-        if 'Inline' not in pointdata[p].keys():
-            return False
-        if 'Crossline' not in pointdata[p].keys():
-            return False
-        if 'Z' not in pointdata[p].keys():
-            return False
-    return True
+    return point_ays.checkPoint(pointdata)
 
 
 if __name__ == "__main__":

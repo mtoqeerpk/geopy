@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -432,8 +433,8 @@ def plotSeisILSlicePlayerFrom2DMat(seis2dmat, initinlsl=None, datacol=3,
     ax.index = int((initinlsl-inlstart)/inlstep)
     ax.set_title('Inline No. ' + str(inlrange[ax.index]) + titlesurf)
     cat = ax.imshow(volume[ax.index],
-                    # aspect=None,
-                    aspect=float(len(xlrange))/float(len(zrange)),
+                    aspect='auto', #float(len(xlrange))/float(len(zrange)),
+                    extent=[xlstart, xlend, zend, zstart],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -640,10 +641,10 @@ def plotSeisILSlicePlayerFrom3DMat(seis3dmat, initinlsl=None, seisinfo=None,
     vis_font.updatePltFont(fontstyle)
     #
     fig, ax = plt.subplots(facecolor='white', figsize=(8, 8))
-    # ax.set_xticks(np.linspace(0, len(xlrange)-1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(xlstart, xlend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
+    # ax.set_xticks(np.linspace(0, len(xlrange)-1, xlnum, dtype=int))
+    # ax.set_xticklabels(np.linspace(xlstart, xlend, xlnum, dtype=int))
+    # ax.set_yticks(np.linspace(0, len(zrange) - 1, znum, dtype=int))
+    # ax.set_yticklabels(np.linspace(zstart, zend, znum, dtype=int))
     ax.set_xlabel('Crossline No.')
     ax.set_ylabel('Vertical (z) Depth/Time')
     volume = np.transpose(seis3dmat, [2,0,1])
@@ -652,7 +653,8 @@ def plotSeisILSlicePlayerFrom3DMat(seis3dmat, initinlsl=None, seisinfo=None,
     ax.set_title('Inline No. ' + str(inlrange[ax.index]) + titlesurf)
     cat = ax.imshow(volume[ax.index],
                     # aspect=None,
-                    aspect=float(len(xlrange))/float(len(zrange)),
+                    aspect='auto', #float(len(zrange))/float(len(xlrange)),
+                    extent=[xlstart, xlend, zend, zstart],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -913,7 +915,8 @@ def plotSeisXLSlicePlayerFrom2DMat(seis2dmat, initxsl=None, datacol=3,
 
     cat = ax.imshow(volume[ax.index],
                     # aspect=None,
-                    aspect=float(len(inlrange))/float(len(zrange)),
+                    aspect='auto', #float(len(inlrange))/float(len(zrange)),
+                    extent=[inlstart, inlend, zend, zstart],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -1133,7 +1136,8 @@ def plotSeisXLSlicePlayerFrom3DMat(seis3dmat, initxsl=None, seisinfo=None,
 
     cat = ax.imshow(volume[ax.index],
                     # aspect=None,
-                    aspect=float(len(inlrange))/float(len(zrange)),
+                    aspect='auto', #float(len(inlrange))/float(len(zrange)),
+                    extent=[inlstart, inlend, zend, zstart],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -1395,8 +1399,8 @@ def plotSeisZSlicePlayerFrom2DMat(seis2dmat, initzsl=None, datacol=3,
     ax.index = int((initzsl - zstart) / zstep)
     ax.set_title('Depth/Time at ' + str(zrange[ax.index]) + titlesurf)
     cat = ax.imshow(volume[ax.index],
-                    # aspect=None,
-                    aspect=float(len(xlrange))/float(len(inlrange)),
+                    aspect='auto', #float(len(xlrange))/float(len(inlrange)),
+                    extent=[xlstart, xlend, inlstart, inlend],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -1593,7 +1597,7 @@ def plotSeisZTracePlayerFrom2DMat(seis2dmat, initinltc=None, initxltc=None,
     ax.set_xlabel('Vertical (z) Depth/Time')
     ax.set_xlim(zrange[-1], zrange[0])
     ax.set_ylim(valuemin, valuemax)
-    volume = np.reshape(seis3dmat, [-1, inlnum*xlnum])
+    volume = np.reshape(np.transpose(seis3dmat, [0, 2, 1]), [-1, inlnum*xlnum])
     ax.volume = volume
     inlidx = int((initinltc-inlstart)/inlstep)
     xlidx = int((initxltc-xlstart)/xlstep)
@@ -1808,9 +1812,9 @@ def plotSeisZSlicePlayerFrom3DMat(seis3dmat, initzsl=None, seisinfo=None,
     #
     fig, ax = plt.subplots(facecolor='white', figsize=(8, 8))
     # ax.set_xticks(np.linspace(0, len(xlrange)-1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(xlstart, xlend, 6, dtype=int))
+    # ax.set_xticklabels(np.linspace(xlstart, xlend, xlnum, dtype=int))
     # ax.set_yticks(np.linspace(0, len(inlrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(inlend, inlstart, 6, dtype=int))
+    # ax.set_yticklabels(np.linspace(inlend, inlstart, inlnum, dtype=int))
     ax.set_xlabel('Crossline No.')
     ax.set_ylabel('Inline No.')
     volume = np.transpose(seis3dmat, [0, 2, 1])
@@ -1819,8 +1823,8 @@ def plotSeisZSlicePlayerFrom3DMat(seis3dmat, initzsl=None, seisinfo=None,
     ax.index = int((initzsl - zstart) / zstep)
     ax.set_title('Depth/Time at ' + str(zrange[ax.index]) + titlesurf)
     cat = ax.imshow(volume[ax.index],
-                    # aspect=None,
-                    aspect=float(len(xlrange))/float(len(inlrange)),
+                    aspect='auto', #float(len(xlrange))/float(len(inlrange)),
+                    extent=[xlstart, xlend, inlstart, inlend],
                     cmap=vis_cmap.makeColorMap(colormap, flipcmap),
                     interpolation=interpolation,
                     vmin=valuemin, vmax=valuemax)
@@ -1994,7 +1998,7 @@ def plotSeisZTracePlayerFrom3DMat(seis3dmat, initinltc=None, initxltc=None,
     ax.set_xlabel('Vertical (z) Depth/Time')
     ax.set_xlim(zrange[-1], zrange[0])
     ax.set_ylim(valuemin, valuemax)
-    volume = np.reshape(seis3dmat, [-1, inlnum*xlnum])
+    volume = np.reshape(np.transpose(seis3dmat, [0, 2, 1]), [-1, inlnum*xlnum])
     ax.volume = volume
     inlidx = int((initinltc-inlstart)/inlstep)
     xlidx = int((initxltc-xlstart)/xlstep)

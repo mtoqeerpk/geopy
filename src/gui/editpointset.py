@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -9,6 +10,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import os, sys
+import numpy as np
 #
 sys.path.append(os.path.dirname(__file__)[:-4])
 from basic.data import data as basic_data
@@ -62,6 +64,10 @@ class editpointset(object):
         self.ldtrename = QtWidgets.QLineEdit(EditPointSet)
         self.ldtrename.setObjectName("ldtrename")
         self.ldtrename.setGeometry(QtCore.QRect(200, 310, 90, 30))
+        self.cbbrename = QtWidgets.QComboBox(EditPointSet)
+        self.cbbrename.setObjectName("cbbrename")
+        self.cbbrename.setGeometry(QtCore.QRect(200, 310, 90, 30))
+        #
         self.btnedit = QtWidgets.QPushButton(EditPointSet)
         self.btnedit.setObjectName("btnedit")
         self.btnedit.setGeometry(QtCore.QRect(100, 370, 100, 30))
@@ -88,20 +94,25 @@ class editpointset(object):
         EditPointSet.setWindowTitle(_translate("EditPointSet", "Edit PointSet"))
         self.lblpoint.setText(_translate("EditPointSet", "List of available pointsets:"))
         self.lblaction.setText(_translate("EditPointSet", "Action:"))
-        self.cbbaction.addItems(['Copy', 'Delete', 'Rename', 'Filter', 'Subset', 'Edit', 'View', 'Cross-plot'])
+        self.cbbaction.addItems(['Copy', 'Delete', 'Rename',
+                                 'Filter', 'Subset', 'Append',
+                                 'Edit', 'View', 'Cross-plot'])
         self.cbbaction.setItemIcon(0, QtGui.QIcon(os.path.join(self.iconpath, "icons/copy.png")))
         self.cbbaction.setItemIcon(1, QtGui.QIcon(os.path.join(self.iconpath, "icons/delete.png")))
         self.cbbaction.setItemIcon(2, QtGui.QIcon(os.path.join(self.iconpath, "icons/rename.png")))
         self.cbbaction.setItemIcon(3, QtGui.QIcon(os.path.join(self.iconpath, "icons/filter.png")))
         self.cbbaction.setItemIcon(4, QtGui.QIcon(os.path.join(self.iconpath, "icons/export.png")))
-        self.cbbaction.setItemIcon(5, QtGui.QIcon(os.path.join(self.iconpath, "icons/pen.png")))
-        self.cbbaction.setItemIcon(6, QtGui.QIcon(os.path.join(self.iconpath, "icons/view.png")))
-        self.cbbaction.setItemIcon(7, QtGui.QIcon(os.path.join(self.iconpath, "icons/plotpoint.png")))
+        self.cbbaction.setItemIcon(5, QtGui.QIcon(os.path.join(self.iconpath, "icons/merge.png")))
+        self.cbbaction.setItemIcon(6, QtGui.QIcon(os.path.join(self.iconpath, "icons/pen.png")))
+        self.cbbaction.setItemIcon(7, QtGui.QIcon(os.path.join(self.iconpath, "icons/view.png")))
+        self.cbbaction.setItemIcon(8, QtGui.QIcon(os.path.join(self.iconpath, "icons/plotpoint.png")))
+        self.cbbaction.setCurrentIndex(7)
         self.cbbaction.currentIndexChanged.connect(self.changeCbbAction)
         self.lblrename.setText(_translate("EditPointSet", ""))
         self.lblrename.setVisible(False)
         self.ldtrename.setText(_translate("EditPointSet", ""))
         self.ldtrename.setVisible(False)
+        self.cbbrename.setVisible(False)
         self.btnedit.setText(_translate("EditPointSet", "Apply"))
         self.btnedit.clicked.connect(self.clickBtnEditPointSet)
         #
@@ -113,15 +124,23 @@ class editpointset(object):
             self.lblrename.setText('Name:')
             self.lblrename.setVisible(True)
             self.ldtrename.setVisible(True)
+            self.cbbrename.setVisible(False)
         elif self.cbbaction.currentIndex() == 4:
             self.lblrename.setText('Size:')
             self.lblrename.setVisible(True)
             self.ldtrename.setVisible(True)
+            self.cbbrename.setVisible(False)
+        elif self.cbbaction.currentIndex() == 5:
+            self.lblrename.setText('Select:')
+            self.lblrename.setVisible(True)
+            self.ldtrename.setVisible(True)
+            self.cbbrename.setVisible(True)
         else:
             self.lblrename.setText('')
             self.lblrename.setVisible(False)
             self.ldtrename.setText('')
             self.ldtrename.setVisible(False)
+            self.cbbrename.setVisible(False)
 
 
     def clickBtnEditPointSet(self):
@@ -136,7 +155,7 @@ class editpointset(object):
             return
         #
         if self.cbbaction.currentIndex() == 0:
-            self.pointdata[_pointlist[0].text()+'_copy'] = self.pointdata[_pointlist[0].text()]
+            self.pointdata[_pointlist[0].text()+'_copy'] = self.pointdata[_pointlist[0].text()].copy()
         if self.cbbaction.currentIndex() == 1:
             self.pointdata.pop(_pointlist[0].text())
         if self.cbbaction.currentIndex() == 2:
@@ -176,6 +195,19 @@ class editpointset(object):
             self.pointdata[_pointlist[0].text()] = basic_mdt.retrieveDictRandom(self.pointdata[_pointlist[0].text()],
                                                                                 batch_size=_size)
         if self.cbbaction.currentIndex() == 5:
+            if self.cbbrename.currentText() not in self.pointdata.keys():
+                print("EditPointSet: No pointset selected for appending")
+                QtWidgets.QMessageBox.critical(self.msgbox,
+                                               'Edit PointSet',
+                                               'No pointset selected for appending')
+                return
+            _pts = {}
+            for f in self.pointdata[self.cbbrename.currentText()].keys():
+                if f in self.pointdata[_pointlist[0].text()].keys():
+                    _pts[f] = np.concatenate((self.pointdata[_pointlist[0].text()][f],
+                                              self.pointdata[self.cbbrename.currentText()][f]), axis=0)
+            self.pointdata[_pointlist[0].text()] = _pts
+        if self.cbbaction.currentIndex() == 6:
             _editpoint = QtWidgets.QDialog()
             _gui = gui_editseispointset()
             _gui.seispointdata = self.pointdata[_pointlist[0].text()]
@@ -184,7 +216,7 @@ class editpointset(object):
             _editpoint.exec()
             self.pointdata[_pointlist[0].text()] = _gui.seispointdata
             _editpoint.show()
-        if self.cbbaction.currentIndex() == 6:
+        if self.cbbaction.currentIndex() == 7:
             _view = QtWidgets.QDialog()
             _gui = gui_viewpointset()
             _gui.pointname = _pointlist[0].text()
@@ -194,7 +226,7 @@ class editpointset(object):
             _view.exec()
             # self.pointdata = _gui.pointdata.copy()
             _view.show()
-        if self.cbbaction.currentIndex() == 7:
+        if self.cbbaction.currentIndex() == 8:
             _cplt = QtWidgets.QDialog()
             _gui = gui_plot2dpointsetcrossplt()
             _gui.pointdata = {}
@@ -214,12 +246,15 @@ class editpointset(object):
 
     def refreshLwgPoint(self):
         self.lwgpoint.clear()
+        self.cbbrename.clear()
         if len(self.pointdata.keys()) > 0:
             for i in sorted(self.pointdata.keys()):
                 if self.checkPointSet(i):
                     item = QtWidgets.QListWidgetItem(self.lwgpoint)
                     item.setText(i)
                     self.lwgpoint.addItem(item)
+            #
+            self.cbbrename.addItems(sorted(self.pointdata.keys()))
 
 
     def refreshMsgBox(self):

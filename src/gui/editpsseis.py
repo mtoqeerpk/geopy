@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     January 2019                                                                    #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -90,6 +90,7 @@ class editpsseis(object):
         self.cbbaction.setItemIcon(2, QtGui.QIcon(os.path.join(self.iconpath, "icons/rename.png")))
         self.cbbaction.setItemIcon(3, QtGui.QIcon(os.path.join(self.iconpath, "icons/view.png")))
         self.cbbaction.setItemIcon(4, QtGui.QIcon(os.path.join(self.iconpath, "icons/gather.png")))
+        self.cbbaction.setCurrentIndex(3)
         self.cbbaction.currentIndexChanged.connect(self.changeCbbAction)
         self.lblrename.setText(_translate("EditPsSeis", ""))
         self.lblrename.setVisible(False)
@@ -125,7 +126,7 @@ class editpsseis(object):
             return
         #
         if self.cbbaction.currentIndex() == 0:
-            self.psseisdata[_psseislist[0].text()+'_copy'] = self.psseisdata[_psseislist[0].text()]
+            self.psseisdata[_psseislist[0].text()+'_copy'] = self.psseisdata[_psseislist[0].text()].copy()
         if self.cbbaction.currentIndex() == 1:
             self.psseisdata.pop(_psseislist[0].text())
         if self.cbbaction.currentIndex() == 2:

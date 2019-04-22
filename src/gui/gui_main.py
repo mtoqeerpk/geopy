@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -21,14 +22,18 @@ from basic.matdict import matdict as basic_mdt
 from core.settings import settings as core_set
 #
 from gui.importsurveymanual import importsurveymanual as gui_importsurveymanual
+from gui.importsurveysegy import importsurveysegy as gui_importsurveysegy
 from gui.importseissegy import importseissegy as gui_importseissegy
 from gui.importseisimageset import importseisimageset as gui_importseisimageset
+from gui.importpsseissegy import importpsseissegy as gui_importpsseissegy
+from gui.importpsseisimageset import importpsseisimageset as gui_importpsseisimageset
 from gui.importpointsetfile import importpointsetfile as gui_importpointsetfile
 from gui.exportsurvey import exportsurvey as gui_exportsurvey
 from gui.exportseissegy import exportseissegy as gui_exportseissegy
 from gui.exportseisnpy import exportseisnpy as gui_exportseisnpy
 from gui.exportseisimageset import exportseisimageset as gui_exportseisimageset
 from gui.exportpsseisnpy import exportpsseisnpy as gui_exportpsseisnpy
+from gui.exportpointsetfile import exportpointsetfile as gui_exportpointsetfile
 from gui.exportpointsetnpy import exportpointsetnpy as gui_exportpointsetnpy
 #
 from gui.managesurvey import managesurvey as gui_managesurvey
@@ -38,6 +43,7 @@ from gui.managepointset import managepointset as gui_managepointset
 #
 from gui.convertseis2pointset import convertseis2pointset as gui_convertseis2pointset
 from gui.convertpointset2seis import convertpointset2seis as gui_convertpointset2seis
+from gui.convertseis2psseis import convertseis2psseis as gui_convertseis2psseis
 from gui.convertpsseis2seis import convertpsseis2seis as gui_convertpsseis2seis
 #
 from gui.calcmathattribsingle import calcmathattribsingle as gui_calcmathattribsingle
@@ -53,8 +59,6 @@ from gui.plot2dpointsetcrossplt import plot2dpointsetcrossplt as gui_plot2dpoint
 from gui.settingsgui import settingsgui as gui_settingsgui
 from gui.settingsgeneral import settingsgeneral as gui_settingsgeneral
 from gui.settingsvisual import settingsvisual as gui_settingsvisual
-from gui.makepytemp import makepytemp as gui_makepytemp
-from gui.execpycode import execpycode as gui_execpycode
 #
 from gui.about import about as gui_about
 
@@ -177,6 +181,13 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionimportsurveymanual.setIcon(icon)
+        self.actionimportsurveysegy = QtWidgets.QAction(MainWindow)
+        self.actionimportsurveysegy.setObjectName("actionimportsurveysegy")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/segy.png")),
+                       QtGui.QIcon.Normal,
+                       QtGui.QIcon.Off)
+        self.actionimportsurveysegy.setIcon(icon)
         self.actionimportsurveynpy = QtWidgets.QAction(MainWindow)
         self.actionimportsurveynpy.setObjectName("actionimportsurveynpy")
         icon = QtGui.QIcon()
@@ -219,6 +230,13 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.menuimportpsseis.setIcon(icon)
+        self.actionimportpsseissegy = QtWidgets.QAction(MainWindow)
+        self.actionimportpsseissegy.setObjectName("actionimportpsseissegy")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/segy.png")),
+                       QtGui.QIcon.Normal,
+                       QtGui.QIcon.Off)
+        self.actionimportpsseissegy.setIcon(icon)
         self.actionimportpsseisnpy = QtWidgets.QAction(MainWindow)
         self.actionimportpsseisnpy.setObjectName("actionimportpsseisnpy")
         icon = QtGui.QIcon()
@@ -226,6 +244,13 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionimportpsseisnpy.setIcon(icon)
+        self.actionimportpsseisimageset = QtWidgets.QAction(MainWindow)
+        self.actionimportpsseisimageset.setObjectName("actionimportpsseisimageset")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/image.png")),
+                       QtGui.QIcon.Normal,
+                       QtGui.QIcon.Off)
+        self.actionimportpsseisimageset.setIcon(icon)
         self.menuimportpointset = QtWidgets.QMenu(self.menuimport)
         self.menuimportpointset.setObjectName("menuimportpointset")
         icon = QtGui.QIcon()
@@ -310,6 +335,13 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.menuexportpointset.setIcon(icon)
+        self.actionexportpointsetfile = QtWidgets.QAction(MainWindow)
+        self.actionexportpointsetfile.setObjectName("actionexportpointsetfile")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/copy.png")),
+                       QtGui.QIcon.Normal,
+                       QtGui.QIcon.Off)
+        self.actionexportpointsetfile.setIcon(icon)
         self.actionexportpointsetnpy = QtWidgets.QAction(MainWindow)
         self.actionexportpointsetnpy.setObjectName("actionexportpointsetnpy")
         icon = QtGui.QIcon()
@@ -324,14 +356,6 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionquit.setIcon(icon)
-        # Shortcuts
-        self.actionnewproject.setShortcut(QtGui.QKeySequence('Ctrl+N'))
-        self.actionopenproject.setShortcut(QtGui.QKeySequence('Ctrl+O'))
-        self.actionsaveproject.setShortcut(QtGui.QKeySequence('Ctrl+S'))
-        self.actionimportseisnpy.setShortcut(QtGui.QKeySequence('Ctrl+M'))
-        self.actionimportpsseisnpy.setShortcut(QtGui.QKeySequence('Ctrl+G'))
-        self.actionimportpointsetnpy.setShortcut(QtGui.QKeySequence('Ctrl+P'))
-        self.actionquit.setShortcut(QtGui.QKeySequence('Ctrl+Q'))
         #
         self.actionmanagesurvey = QtWidgets.QAction(MainWindow)
         self.actionmanagesurvey.setObjectName("actionmanagesurvey")
@@ -361,11 +385,6 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionmanagepointset.setIcon(icon)
-        # Shortcuts
-        self.actionmanagesurvey.setShortcut(QtGui.QKeySequence('Shift+V'))
-        self.actionmanageseis.setShortcut(QtGui.QKeySequence('Shift+M'))
-        self.actionmanagepsseis.setShortcut(QtGui.QKeySequence('Shift+G'))
-        self.actionmanagepointset.setShortcut(QtGui.QKeySequence('Shift+P'))
         #
         self.menudataconversion = QtWidgets.QMenu(self.menutool)
         self.menudataconversion.setObjectName("menudataconversion")
@@ -388,6 +407,13 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionconvertpointset2seis.setIcon(icon)
+        self.actionconvertseis2psseis = QtWidgets.QAction(MainWindow)
+        self.actionconvertseis2psseis.setObjectName("actionconvertseis2psseis")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/seismic.png")),
+                       QtGui.QIcon.Normal,
+                       QtGui.QIcon.Off)
+        self.actionconvertseis2psseis.setIcon(icon)
         self.actionconvertpsseis2seis = QtWidgets.QAction(MainWindow)
         self.actionconvertpsseis2seis.setObjectName("actionconvertpsseis2seis")
         icon = QtGui.QIcon()
@@ -423,10 +449,6 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actioncalcmathattribmultiple.setIcon(icon)
-        # Shortcut
-        self.actionconvertseis2pointset.setShortcut(QtGui.QKeySequence('Alt+M'))
-        self.actionconvertpointset2seis.setShortcut(QtGui.QKeySequence('Alt+P'))
-        self.actionconvertpsseis2seis.setShortcut(QtGui.QKeySequence('Alt+G'))
         #
         self.menu1dwindow = QtWidgets.QMenu(self.menuvis)
         self.menu1dwindow.setObjectName("menu1dwindow")
@@ -521,13 +543,6 @@ class mainwindow(object):
         self.menu3dwindow.setIcon(icon)
         self.actionplot3dslice = QtWidgets.QAction(MainWindow)
         self.actionplot3dslice.setObjectName("actionplot3dslice")
-        # Shortcut
-        self.actionplot1dseisz.setShortcut(QtGui.QKeySequence('Alt+W'))
-        self.actionplot2dseisinl.setShortcut(QtGui.QKeySequence('Alt+I'))
-        self.actionplot2dseisxl.setShortcut(QtGui.QKeySequence('Alt+X'))
-        self.actionplot2dseisz.setShortcut(QtGui.QKeySequence('Alt+Z'))
-        self.actionplot2dpsseisshot.setShortcut(QtGui.QKeySequence('Alt+T'))
-        self.actionplot2dpointsetcrossplt.setShortcut(QtGui.QKeySequence('Alt+C'))
         #
         self.menusettings = QtWidgets.QMenu(self.menuutil)
         self.menusettings.setObjectName("menusettings")
@@ -557,31 +572,6 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionsettingsvisual.setIcon(icon)
-        self.menupycompiler = QtWidgets.QMenu(self.menuutil)
-        self.menupycompiler.setObjectName("menupycompiler")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/python.png")),
-                       QtGui.QIcon.Normal,
-                       QtGui.QIcon.Off)
-        self.menupycompiler.setIcon(icon)
-        self.actionmakepytemp = QtWidgets.QAction(MainWindow)
-        self.actionmakepytemp.setObjectName("actionmakepytemp")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/new.png")),
-                       QtGui.QIcon.Normal,
-                       QtGui.QIcon.Off)
-        self.actionmakepytemp.setIcon(icon)
-        self.actionexecpycode = QtWidgets.QAction(MainWindow)
-        self.actionexecpycode.setObjectName("actionexecpycode")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/apply.png")),
-                       QtGui.QIcon.Normal,
-                       QtGui.QIcon.Off)
-        self.actionexecpycode.setIcon(icon)
-        # Shortcut
-        self.actionsettingsgui.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F8))
-        self.actionsettingsgeneral.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F9))
-        self.actionsettingsvisual.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F10))
         #
         self.actionmanual = QtWidgets.QAction(MainWindow)
         self.actionmanual.setObjectName("actionmanual")
@@ -604,8 +594,6 @@ class mainwindow(object):
                        QtGui.QIcon.Normal,
                        QtGui.QIcon.Off)
         self.actionabout.setIcon(icon)
-        # Shortcut
-        self.actionmanual.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F1))
         #
         self.menubar.addAction(self.menufile.menuAction())
         self.menubar.addAction(self.menumanage.menuAction())
@@ -622,6 +610,7 @@ class mainwindow(object):
         self.menufile.addAction(self.menuimport.menuAction())
         self.menuimport.addAction(self.menuimportsurvey.menuAction())
         self.menuimportsurvey.addAction(self.actionimportsurveymanual)
+        self.menuimportsurvey.addAction(self.actionimportsurveysegy)
         self.menuimportsurvey.addAction(self.actionimportsurveynpy)
         self.menuimport.addSeparator()
         self.menuimport.addAction(self.menuimportseis.menuAction())
@@ -629,7 +618,10 @@ class mainwindow(object):
         self.menuimportseis.addAction(self.actionimportseisnpy)
         self.menuimportseis.addAction(self.actionimportseisimageset)
         self.menuimport.addAction(self.menuimportpsseis.menuAction())
+        self.menuimportpsseis.addAction(self.actionimportpsseissegy)
         self.menuimportpsseis.addAction(self.actionimportpsseisnpy)
+        self.menuimportpsseis.addAction(self.actionimportpsseisimageset)
+        self.menuimport.addSeparator()
         self.menuimport.addAction(self.menuimportpointset.menuAction())
         self.menuimportpointset.addAction(self.actionimportpointsetfile)
         self.menuimportpointset.addAction(self.actionimportpointsetnpy)
@@ -642,7 +634,9 @@ class mainwindow(object):
         self.menuexportseis.addAction(self.actionexportseisimageset)
         self.menuexport.addAction(self.menuexportpsseis.menuAction())
         self.menuexportpsseis.addAction(self.actionexportpsseisnpy)
+        self.menuexport.addSeparator()
         self.menuexport.addAction(self.menuexportpointset.menuAction())
+        self.menuexportpointset.addAction(self.actionexportpointsetfile)
         self.menuexportpointset.addAction(self.actionexportpointsetnpy)
         self.menufile.addSeparator()
         self.menufile.addAction(self.actionquit)
@@ -657,6 +651,7 @@ class mainwindow(object):
         self.menudataconversion.addAction(self.actionconvertseis2pointset)
         self.menudataconversion.addAction(self.actionconvertpointset2seis)
         self.menudataconversion.addSeparator()
+        self.menudataconversion.addAction(self.actionconvertseis2psseis)
         self.menudataconversion.addAction(self.actionconvertpsseis2seis)
         self.menutool.addSeparator()
         self.menutool.addAction(self.menuattribengine.menuAction())
@@ -685,9 +680,6 @@ class mainwindow(object):
         self.menusettings.addAction(self.actionsettingsgui)
         self.menusettings.addAction(self.actionsettingsgeneral)
         self.menusettings.addAction(self.actionsettingsvisual)
-        self.menuutil.addAction(self.menupycompiler.menuAction())
-        self.menupycompiler.addAction(self.actionmakepytemp)
-        self.menupycompiler.addAction(self.actionexecpycode)
         #
         self.menuhelp.addAction(self.actionmanual)
         self.menuhelp.addAction(self.actionsupport)
@@ -698,20 +690,17 @@ class mainwindow(object):
         self.toolbarleft.addAction(self.menuimport.menuAction())
         self.toolbarleft.addSeparator()
         self.toolbarleft.addAction(self.menuexport.menuAction())
-        self.toolbarleft.setVisible(self.settings['Gui']['Toolbar']['Left'])
         #
         self.toolbarright.setOrientation(QtCore.Qt.Vertical)
         self.toolbarright.addAction(self.menudataconversion.menuAction())
         self.toolbarright.addSeparator()
         self.toolbarright.addAction(self.menuattribengine.menuAction())
-        self.toolbarright.setVisible(self.settings['Gui']['Toolbar']['Right'])
         #
         self.toolbartop.addAction(self.actionmanagesurvey)
         self.toolbartop.addSeparator()
         self.toolbartop.addAction(self.actionmanageseis)
         self.toolbartop.addAction(self.actionmanagepsseis)
         self.toolbartop.addAction(self.actionmanagepointset)
-        self.toolbartop.setVisible(self.settings['Gui']['Toolbar']['Top'])
         #
         self.toolbarbottom.addAction(self.actionplot1dseisz)
         self.toolbarbottom.addAction(self.actionplot2dseisinl)
@@ -721,7 +710,6 @@ class mainwindow(object):
         self.toolbarbottom.addAction(self.actionplot2dpsseisshot)
         self.toolbarbottom.addSeparator()
         self.toolbarbottom.addAction(self.actionplot2dpointsetcrossplt)
-        self.toolbarbottom.setVisible(self.settings['Gui']['Toolbar']['Bottom'])
         #
         self.msgbox = QtWidgets.QMessageBox(MainWindow)
         self.msgbox.setObjectName("msgbox")
@@ -732,7 +720,7 @@ class mainwindow(object):
         # Background image
         self.bkimage = QtWidgets.QLabel(MainWindow)
         self.bkimage.setObjectName("bkimage")
-        self.bkimage.setGeometry(QtCore.QRect(200, 50, 500, 500))
+        self.bkimage.setGeometry(QtCore.QRect(100, 130, 700, 300))
 
         self.retranslateGUI(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -742,7 +730,7 @@ class mainwindow(object):
         self.dialog = MainWindow
         #
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "GeoPy V2019"+" <"+self.projname+">"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "GeoPy V2019a"+" <"+self.projname+">"))
         self.menufile.setTitle(_translate("MainWindow", "&File"))
         self.menumanage.setTitle(_translate("MainWindow", "&Manage"))
         self.menutool.setTitle(_translate("MainWindow", "&Toolbox"))
@@ -757,6 +745,7 @@ class mainwindow(object):
         self.menuimport.setTitle(_translate("MainWindow", "Import"))
         self.menuimportsurvey.setTitle(_translate("MainWindow", "Survey"))
         self.actionimportsurveymanual.setText(_translate("MainWindow", "Create"))
+        self.actionimportsurveysegy.setText(_translate("MainWindow", "SEG-Y"))
         self.actionimportsurveynpy.setText(_translate("MainWindow", "NumPy"))
         self.menuimportseis.setTitle(_translate("MainWindow", "Seismic"))
         self.actionimportseissegy.setText(_translate("MainWindow", "SEG-Y"))
@@ -764,7 +753,9 @@ class mainwindow(object):
         self.actionimportseisnpy.setToolTip("Import Seismic from NumPy")
         self.actionimportseisimageset.setText(_translate("MainWindow", "ImageSet"))
         self.menuimportpsseis.setTitle(_translate("MainWindow", "Pre-stack Seismic"))
+        self.actionimportpsseissegy.setText(_translate("MainWindow", "SEG-Y"))
         self.actionimportpsseisnpy.setText(_translate("MainWindow", "NumPy"))
+        self.actionimportpsseisimageset.setText(_translate("MainWindow", "ImageSet"))
         self.menuimportpointset.setTitle(_translate("MainWindow", "PointSet"))
         self.actionimportpointsetfile.setText(_translate("MainWindow", "Ascii File"))
         self.actionimportpointsetnpy.setText(_translate("MainWindow", "NumPy"))
@@ -777,8 +768,17 @@ class mainwindow(object):
         self.menuexportpsseis.setTitle(_translate("MainWindow", "Pre-stack Seismic"))
         self.actionexportpsseisnpy.setText(_translate("MainWindow", "NumPy"))
         self.menuexportpointset.setTitle(_translate("MainWindow", "PointSet"))
+        self.actionexportpointsetfile.setText(_translate("MainWindow", "Ascii File"))
         self.actionexportpointsetnpy.setText(_translate("MainWindow", "NumPy"))
         self.actionquit.setText(_translate("MainWindow", "Quit"))
+        # Shortcuts
+        self.actionnewproject.setShortcut(QtGui.QKeySequence('Ctrl+N'))
+        self.actionopenproject.setShortcut(QtGui.QKeySequence('Ctrl+O'))
+        self.actionsaveproject.setShortcut(QtGui.QKeySequence('Ctrl+S'))
+        self.actionimportseisnpy.setShortcut(QtGui.QKeySequence('Ctrl+M'))
+        self.actionimportpsseisnpy.setShortcut(QtGui.QKeySequence('Ctrl+G'))
+        self.actionimportpointsetnpy.setShortcut(QtGui.QKeySequence('Ctrl+P'))
+        self.actionquit.setShortcut(QtGui.QKeySequence('Ctrl+Q'))
         #
         self.actionmanagesurvey.setText(_translate("MainWindow", "Survey"))
         self.actionmanagesurvey.setToolTip("Manage Seismic Survey")
@@ -788,15 +788,24 @@ class mainwindow(object):
         self.actionmanagepsseis.setToolTip("Manage Pre-stack Seismic")
         self.actionmanagepointset.setText(_translate("MainWindow", "PointSet"))
         self.actionmanagepointset.setToolTip("Manage PointSets")
+        # Shortcuts
+        self.actionmanagesurvey.setShortcut(QtGui.QKeySequence('Shift+V'))
+        self.actionmanageseis.setShortcut(QtGui.QKeySequence('Shift+M'))
+        self.actionmanagepsseis.setShortcut(QtGui.QKeySequence('Shift+G'))
+        self.actionmanagepointset.setShortcut(QtGui.QKeySequence('Shift+P'))
         #
         self.menudataconversion.setTitle(_translate("MainWindow", "Data conversion"))
         self.actionconvertseis2pointset.setText(_translate("MainWindow", "Seismic --> PointSet"))
         self.actionconvertpointset2seis.setText(_translate("MainWindow", "PointSet --> Seismic"))
+        self.actionconvertseis2psseis.setText(_translate("MainWindow", "Seismic --> Pre-stack"))
         self.actionconvertpsseis2seis.setText(_translate("MainWindow", "Pre-stack --> Seismic"))
         self.menuattribengine.setTitle(_translate("MainWindow", "Seismic attribute"))
         self.menumathattrib.setTitle(_translate("MainWindow", "Mathematical"))
         self.actioncalcmathattribsingle.setText(_translate("MainWindow", "from Single property"))
         self.actioncalcmathattribmultiple.setText(_translate("MainWindow", "between Multiple properties"))
+        # Shortcut
+        self.actionconvertseis2pointset.setShortcut(QtGui.QKeySequence('Alt+M'))
+        self.actionconvertpointset2seis.setShortcut(QtGui.QKeySequence('Alt+P'))
         #
         self.menu1dwindow.setTitle(_translate("MainWindow", "1D window"))
         self.menu1dwindowseis.setTitle(_translate("MainWindow", "Seismic"))
@@ -818,29 +827,47 @@ class mainwindow(object):
         self.actionplot2dpointsetcrossplt.setToolTip("2D Window: PointSet Cross-plot")
         self.menu3dwindow.setTitle(_translate("MainWindow", "3D window"))
         self.actionplot3dslice.setText(_translate("MainWindow", "IL/XL/Z"))
+        # Shortcut
+        self.actionplot1dseisz.setShortcut(QtGui.QKeySequence('Alt+W'))
+        self.actionplot2dseisinl.setShortcut(QtGui.QKeySequence('Alt+I'))
+        self.actionplot2dseisxl.setShortcut(QtGui.QKeySequence('Alt+X'))
+        self.actionplot2dseisz.setShortcut(QtGui.QKeySequence('Alt+Z'))
+        self.actionplot2dpsseisshot.setShortcut(QtGui.QKeySequence('Alt+G'))
+        self.actionplot2dpointsetcrossplt.setShortcut(QtGui.QKeySequence('Alt+C'))
         #
         self.menusettings.setTitle(_translate("MainWindow", 'Settings'))
         self.actionsettingsgui.setText(_translate("MainWindow", "GeoPy"))
         self.actionsettingsgeneral.setText(_translate("MainWindow", "General"))
         self.actionsettingsvisual.setText(_translate("MainWindow", "Visual"))
-        self.menupycompiler.setTitle(_translate("MainWindow", 'Python compiler'))
-        self.actionmakepytemp.setText(_translate("MainWindow", "Create template"))
-        self.actionexecpycode.setText(_translate("MainWindow", "Execute"))
+        # Shortcut
+        self.actionsettingsgui.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F8))
+        self.actionsettingsgeneral.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F9))
+        self.actionsettingsvisual.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F10))
         #
         self.actionmanual.setText(_translate("MainWindow", "Manual"))
         self.actionsupport.setText(_translate("MainWindow", "Online support"))
         self.actionabout.setText(_translate("MainWindow", "About"))
+        # Shortcut
+        self.actionmanual.setShortcut(QtGui.QKeySequence(QtCore.Qt.Key_F1))
+        #
+        self.toolbarleft.setVisible(self.settings['Gui']['Toolbar']['Left'])
+        self.toolbarright.setVisible(self.settings['Gui']['Toolbar']['Right'])
+        self.toolbartop.setVisible(self.settings['Gui']['Toolbar']['Top'])
+        self.toolbarbottom.setVisible(self.settings['Gui']['Toolbar']['Bottom'])
         #
         self.actionnewproject.triggered.connect(self.doNewProject)
         self.actionopenproject.triggered.connect(self.doOpenProject)
         self.actionsaveproject.triggered.connect(self.doSaveProject)
         self.actionsaveasproject.triggered.connect(self.doSaveasProject)
         self.actionimportsurveymanual.triggered.connect(self.doImportSurveyManual)
+        self.actionimportsurveysegy.triggered.connect(self.doImportSurveySegy)
         self.actionimportsurveynpy.triggered.connect(self.doImportSurveyNpy)
         self.actionimportseissegy.triggered.connect(self.doImportSeisSegy)
         self.actionimportseisnpy.triggered.connect(self.doImportSeisNpy)
         self.actionimportseisimageset.triggered.connect(self.doImportSeisImageSet)
+        self.actionimportpsseissegy.triggered.connect(self.doImportPsSeisSegy)
         self.actionimportpsseisnpy.triggered.connect(self.doImportPsSeisNpy)
+        self.actionimportpsseisimageset.triggered.connect(self.doImportPsSeisImageSet)
         self.actionimportpointsetfile.triggered.connect(self.doImportPointSetFile)
         self.actionimportpointsetnpy.triggered.connect(self.doImportPointSetNpy)
         self.actionexportsurvey.triggered.connect(self.doExportSurvey)
@@ -848,6 +875,7 @@ class mainwindow(object):
         self.actionexportseisnpy.triggered.connect(self.doExportSeisNpy)
         self.actionexportseisimageset.triggered.connect(self.doExportSeisImageSet)
         self.actionexportpsseisnpy.triggered.connect(self.doExportPsSeisNpy)
+        self.actionexportpointsetfile.triggered.connect(self.doExportPointSetFile)
         self.actionexportpointsetnpy.triggered.connect(self.doExportPointSetNpy)
         self.actionquit.triggered.connect(self.doQuit)
         #
@@ -858,6 +886,7 @@ class mainwindow(object):
         #
         self.actionconvertseis2pointset.triggered.connect(self.doConvertSeis2PointSet)
         self.actionconvertpointset2seis.triggered.connect(self.doConvertPointSet2Seis)
+        self.actionconvertseis2psseis.triggered.connect(self.doConvertSeis2PsSeis)
         self.actionconvertpsseis2seis.triggered.connect(self.doConvertPsSeis2Seis)
         #
         self.actioncalcmathattribsingle.triggered.connect(self.doCalcMathAttribSingle)
@@ -874,8 +903,6 @@ class mainwindow(object):
         self.actionsettingsgui.triggered.connect(self.doSettingsGUI)
         self.actionsettingsgeneral.triggered.connect(self.doSettingsGeneral)
         self.actionsettingsvisual.triggered.connect(self.doSettingsVisual)
-        self.actionmakepytemp.triggered.connect(self.doMakePyTemp)
-        self.actionexecpycode.triggered.connect(self.doExecPyCode)
         #
         self.actionmanual.triggered.connect(self.doManual)
         self.actionsupport.triggered.connect(self.doSupport)
@@ -932,7 +959,7 @@ class mainwindow(object):
             return
         # Survey
         if 'survinfo' in _proj.keys():
-            _survinfo = _proj['survinfo']
+            self.survinfo = _proj['survinfo']
             if os.path.exists(os.path.join(self.projpath,
                                            self.projname + '.proj.data/Survey/' + 'survey' + '.npy')):
                 try:
@@ -940,64 +967,58 @@ class mainwindow(object):
                                                      self.projname + '.proj.data/Survey/' + 'survey' + '.npy')).item()
                 except ValueError:
                     _survinfo = {}
-            if checkSurvInfo(_survinfo):
-                self.survinfo = _survinfo
+                if checkSurvInfo(_survinfo):
+                    self.survinfo = _survinfo
         else:
             self.survinfo = {}
         # Seismic
         if 'survinfo' in _proj.keys() and 'seisdata' in _proj.keys():
-            _seisdata = {}
+            self.seisdata = {}
             for key in _proj['seisdata'].keys():
                 if os.path.exists(os.path.join(self.projpath,
                                                self.projname+'.proj.data/Seismic/'+key+'.npy')):
                     try:
-                        _seisdata[key] = np.load(os.path.join(self.projpath,
+                        _seisdata = np.load(os.path.join(self.projpath,
                                                               self.projname + '.proj.data/Seismic/' + key + '.npy'))
                     except ValueError:
-                        _seisdata[key] = []
-            if checkSeisData(_seisdata, self.survinfo):
-                self.seisdata = _seisdata
-            else:
-                self.seisdata = {}
+                        _seisdata = []
+                    if checkSeisData(_seisdata, self.survinfo):
+                        self.seisdata[key] = _seisdata
         else:
             self.seisdata = {}
         # Pre-stack seismic
         if 'psseisdata' in _proj.keys():
-            _psseisdata = {}
+            self.psseisdata = {}
             for key in _proj['psseisdata'].keys():
                 if os.path.exists(os.path.join(self.projpath,
                                                self.projname + '.proj.data/PsSeismic/' + key + '.npy')):
                     try:
-                        _psseisdata[key] = np.load(os.path.join(self.projpath,
+                        _psseisdata = np.load(os.path.join(self.projpath,
                                                                 self.projname + '.proj.data/PsSeismic/' + key + '.npy')).item()
                     except ValueError:
-                        _psseisdata[key] = {}
-            if checkPsSeisData(_psseisdata):
-                self.psseisdata = _psseisdata
-            else:
-                self.psseisdata = _psseisdata
+                        _psseisdata = {}
+                    if checkPsSeisData(_psseisdata):
+                        self.psseisdata[key] = _psseisdata
         else:
             self.psseisdata = {}
         # PointSet
         if 'pointdata' in _proj.keys():
-            _pointdata = {}
+            self.pointdata = {}
             for key in _proj['pointdata'].keys():
                 if os.path.exists(os.path.join(self.projpath,
                                                self.projname+'.proj.data/PointSet/'+key+'.npy')):
                     try:
-                        _pointdata[key] = np.load(os.path.join(self.projpath,
+                        _pointdata = np.load(os.path.join(self.projpath,
                                                                self.projname + '.proj.data/PointSet/' + key + '.npy')).item()
                     except ValueError:
-                        _pointdata[key] = {}
-            if checkPointData(_pointdata):
-                self.pointdata = _pointdata
-            else:
-                self.pointdata = {}
+                        _pointdata = {}
+                    if checkPointData(_pointdata):
+                        self.pointdata[key] = _pointdata
         else:
             self.pointdata = {}
         # Settings
         if 'settings' in _proj.keys():
-            _settings = _proj['settings']
+            self.settings = _proj['settings']
             if os.path.exists(os.path.join(self.projpath,
                                            self.projname + '.proj.data/Settings/' + 'settings' + '.npy')):
                 try:
@@ -1005,10 +1026,8 @@ class mainwindow(object):
                                                      self.projname + '.proj.data/Settings/' + 'settings' + '.npy')).item()
                 except ValueError:
                     _settings = {}
-            if checkSettings(_settings):
-                self.settings = _settings
-            # else:
-            #     self.settings = {}
+                if checkSettings(_settings):
+                    self.settings = _settings
         # else:
         #     self.settings = {}
         #
@@ -1074,6 +1093,17 @@ class mainwindow(object):
         _importsurvey.show()
 
 
+    def doImportSurveySegy(self):
+        _importsurvey = QtWidgets.QDialog()
+        _gui = gui_importsurveysegy()
+        _gui.survinfo = self.survinfo
+        _gui.rootpath = self.settings['General']['RootPath']
+        _gui.setupGUI(_importsurvey)
+        _importsurvey.exec_()
+        self.survinfo = _gui.survinfo
+        _importsurvey.show()
+
+
     def doImportSurveyNpy(self):
         self.refreshMsgBox()
         #
@@ -1108,8 +1138,6 @@ class mainwindow(object):
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import Survey NumPy",
                                           "Survey imported successfully")
-        #
-        self.checkSurvInfo()
         #
         return
 
@@ -1184,38 +1212,21 @@ class mainwindow(object):
                 _npydata = np.reshape(np.transpose(_npydata, [2, 1, 0]), [-1, 1])
 
             _seisdata = {}
-            _seisdata[_filename] = _npydata
+            if checkSeisData(_npydata, _survinfo):
+                _seisdata[_filename] = _npydata
         #
         # add new data to seisdata
-        if checkSurvInfo(self.survinfo) is False:
-            self.seisdata = _seisdata
+        if checkSurvInfo(_survinfo):
             self.survinfo = _survinfo
-        else:
-            if checkSurvInfo(_survinfo) \
-                    and np.array_equal(self.survinfo['ILRange'], _survinfo['ILRange']) \
-                    and np.array_equal(self.survinfo['XLRange'], _survinfo['XLRange']) \
-                    and np.array_equal(self.survinfo['ZRange'], _survinfo['ZRange']):
-                for key in _seisdata.keys():
-                    if key in self.seisdata.keys():
-                        reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic NumPy',
-                                                               key + ' already exists. Overwrite?',
-                                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                               QtWidgets.QMessageBox.No)
-                        if reply == QtWidgets.QMessageBox.No:
-                            return
-                    self.seisdata[key] = _seisdata[key]
-            else:
+        for key in _seisdata.keys():
+            if key in self.seisdata.keys() and checkSeisData(self.seisdata[key], self.survinfo):
                 reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic NumPy',
-                                                       'Survey does not match with imported seismic. Overwrite?',
+                                                       key + ' already exists. Overwrite?',
                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                        QtWidgets.QMessageBox.No)
                 if reply == QtWidgets.QMessageBox.No:
                     return
-                self.seisdata = _seisdata
-                self.survinfo = _survinfo
-        #
-        self.checkSurvInfo()
-        self.checkSeisData()
+            self.seisdata[key] = _seisdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import Seismic NumPy",
@@ -1235,6 +1246,17 @@ class mainwindow(object):
         self.seisdata = _gui.seisdata
         self.survinfo = _gui.survinfo
         _importimage.show()
+
+
+    def doImportPsSeisSegy(self):
+        _importsegy = QtWidgets.QDialog()
+        _gui = gui_importpsseissegy()
+        _gui.psseisdata = self.psseisdata
+        _gui.rootpath = self.settings['General']['RootPath']
+        _gui.setupGUI(_importsegy)
+        _importsegy.exec_()
+        self.psseisdata = _gui.psseisdata
+        _importsegy.show()
 
 
     def doImportPsSeisNpy(self):
@@ -1260,32 +1282,37 @@ class mainwindow(object):
             _psseisdata = {}
             _filename = (os.path.basename(_file[0])).replace('.psseis.npy', '')
             _psseisdata[_filename] = {}
-            for _i in range(np.shape(_npydata)[2]):
-                _psseisdata[_filename][str(_i)] = {}
-                _psseisdata[_filename][str(_i)]['ShotData'] = _npydata[:, :, _i]
-                _psseisdata[_filename][str(_i)]['ShotInfo'] = psseis_ays.createShotInfo(_npydata[:, :, _i])
+            _psseisdata[_filename]['0'] = {}
+            _psseisdata[_filename]['0']['ShotData'] = _npydata
+            _psseisdata[_filename]['0']['ShotInfo'] = psseis_ays.createShotInfo(_npydata)
         #
-        # add new data to pointdata
-        if checkPsSeisData(self.psseisdata) is False:
-            self.psseisdata = _psseisdata
-        else:
-            for key in _psseisdata.keys():
-                if key in self.psseisdata.keys():
-                    reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Pre-stack Seismic NumPy',
-                                                           key + ' already exists. Overwrite?',
-                                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-                    if reply == QtWidgets.QMessageBox.No:
-                        return
-                self.psseisdata[key] = _psseisdata[key]
-        #
-        self.checkPsSeisData()
+        # add new data to psseisdata
+        for key in _psseisdata.keys():
+            if key in self.psseisdata.keys() and checkPsSeisData(self.psseisdata[key]):
+                reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Pre-stack Seismic NumPy',
+                                                       key + ' already exists. Overwrite?',
+                                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.No:
+                    return
+            self.psseisdata[key] = _psseisdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import Pre-stack Seismic NumPy",
                                           "NumPy imported successfully")
         #
         return
+
+
+    def doImportPsSeisImageSet(self):
+        _importimage = QtWidgets.QDialog()
+        _gui = gui_importpsseisimageset()
+        _gui.psseisdata = self.psseisdata
+        _gui.rootpath = self.settings['General']['RootPath']
+        _gui.setupGUI(_importimage)
+        _importimage.exec_()
+        self.psseisdata = _gui.psseisdata
+        _importimage.show()
 
 
     def doImportPointSetFile(self):
@@ -1339,20 +1366,15 @@ class mainwindow(object):
                 _pointdata[_filename]['property_'+str(_i+1)] = _npydata[:, _i+3:_i+4]
         #
         # add new data to pointdata
-        if checkPointData(self.pointdata) is False:
-            self.pointdata = _pointdata
-        else:
-            for key in _pointdata.keys():
-                if key in self.pointdata.keys():
-                    reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import PointSet NumPy',
-                                                           key + ' already exists. Overwrite?',
-                                                           QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                           QtWidgets.QMessageBox.No)
-                    if reply == QtWidgets.QMessageBox.No:
-                        return
-                self.pointdata[key] = _pointdata[key]
-        #
-        self.checkPointData()
+        for key in _pointdata.keys():
+            if key in self.pointdata.keys() and checkPointData(_pointdata[key]):
+                reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import PointSet NumPy',
+                                                       key + ' already exists. Overwrite?',
+                                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.No:
+                    return
+            self.pointdata[key] = _pointdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import PointSet NumPy",
@@ -1412,6 +1434,16 @@ class mainwindow(object):
         _gui.setupGUI(_exportnpy)
         _exportnpy.exec_()
         _exportnpy.show()
+
+
+    def doExportPointSetFile(self):
+        _exportfile = QtWidgets.QDialog()
+        _gui = gui_exportpointsetfile()
+        _gui.pointdata = self.pointdata
+        _gui.rootpath = self.settings['General']['RootPath']
+        _gui.setupGUI(_exportfile)
+        _exportfile.exec_()
+        _exportfile.show()
 
 
     def doExportPointSetNpy(self):
@@ -1510,6 +1542,18 @@ class mainwindow(object):
         _convert.show()
 
 
+    def doConvertSeis2PsSeis(self):
+        _convert = QtWidgets.QDialog()
+        _gui = gui_convertseis2psseis()
+        _gui.survinfo = self.survinfo
+        _gui.seisdata = self.seisdata
+        _gui.psseisdata = self.psseisdata
+        _gui.setupGUI(_convert)
+        _convert.exec()
+        self.psseisdata = _gui.psseisdata
+        _convert.show()
+
+
     def doConvertPsSeis2Seis(self):
         _convert = QtWidgets.QDialog()
         _gui = gui_convertpsseis2seis()
@@ -1538,6 +1582,7 @@ class mainwindow(object):
     def doCalcMathAttribMultiple(self):
         _attrib = QtWidgets.QDialog()
         _gui = gui_calcmathattribmultiple()
+        _gui.survinfo = self.survinfo
         _gui.seisdata = self.seisdata
         _gui.rootpath = self.settings['General']['RootPath']
         _gui.setupGUI(_attrib)
@@ -1666,30 +1711,6 @@ class mainwindow(object):
         _settings.show()
 
 
-    def doMakePyTemp(self):
-        _pycode = QtWidgets.QDialog()
-        _gui = gui_makepytemp()
-        _gui.rootpath = self.settings['General']['RootPath']
-        _gui.setupGUI(_pycode)
-        _pycode.exec()
-        _pycode.show()
-
-
-    def doExecPyCode(self):
-        _pycode = QtWidgets.QDialog()
-        _gui = gui_execpycode()
-        _gui.survinfo = self.survinfo
-        _gui.seisdata = self.seisdata
-        _gui.pointdata = self.pointdata
-        _gui.rootpath = self.settings['General']['RootPath']
-        _gui.setupGUI(_pycode)
-        _pycode.exec()
-        self.survinfo = _gui.survinfo
-        self.seisdata = _gui.seisdata
-        self.pointdata = _gui.pointdata
-        _pycode.show()
-
-
     def doManual(self):
         self.refreshMsgBox()
         webbrowser.open("https://geopyinfo.wixsite.com/geopy/manual")
@@ -1726,46 +1747,6 @@ class mainwindow(object):
         _gui.setupGUI(_dialog)
 
 
-    def checkSurvInfo(self):
-        self.refreshMsgBox()
-        #
-        if checkSurvInfo(self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'GeoPy',
-                                           'No survey found')
-            return
-
-
-    def checkSeisData(self):
-        self.refreshMsgBox()
-        #
-        if checkSeisData(self.seisdata, self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'GeoPy',
-                                            'Seismic & survey not match')
-            return
-
-
-    def checkPsSeisData(self):
-        self.refreshMsgBox()
-        #
-        if checkPsSeisData(self.psseisdata) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'GeoPy',
-                                           'No Pre-stack seismic found')
-            return
-
-
-    def checkPointData(self):
-        self.refreshMsgBox()
-        #
-        if checkPointData(self.pointdata) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'GeoPy',
-                                            'No pointset found')
-            return
-
-
     def refreshMsgBox(self):
         _center_x = self.dialog.geometry().center().x()
         _center_y = self.dialog.geometry().center().y()
@@ -1784,22 +1765,12 @@ class qt_mainwindow(QtWidgets.QMainWindow):
             event.ignore()
 
 
-def gui_main(survinfo={}, seisdata={}, pointdata={},
-             rootpath=os.path.dirname(__file__)[:-8],
-             settings={}):
+def gui_main(startpath=os.path.dirname(__file__)[:-8]):
     app = QtWidgets.QApplication(sys.argv)
     # MainWindow = QtWidgets.QMainWindow()
     MainWindow = qt_mainwindow()
     gui = mainwindow()
-    if checkSurvInfo(survinfo):
-        gui.survinfo = survinfo
-    if checkSeisData(survinfo, seisdata):
-        gui.seisdata = seisdata
-    if checkPointData(pointdata):
-        gui.pointdata = pointdata
-    if checkSettings(settings):
-        gui.settings = settings
-    gui.settings['General']['RootPath'] = rootpath
+    gui.settings['General']['RootPath'] = startpath
     gui.setupGUI(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
@@ -1810,34 +1781,15 @@ def checkSurvInfo(survinfo):
 
 
 def checkSeisData(seisdata, survinfo={}):
-    if seis_ays.checkSeisInfo(survinfo) is False:
-        return False
-    if seisdata is None:
-        return False
-    for f in seisdata.keys():
-        if np.shape(seisdata[f])[0] != survinfo['SampleNum']:
-            return False
-    return True
+    return seis_ays.isSeis2DMatConsistentWithSeisInfo(seisdata, survinfo)
 
 
 def checkPsSeisData(psseisdata):
-    if psseisdata is None or len(psseisdata.keys()) < 1:
-        return False
-    for p in psseisdata.keys():
-        if psseis_ays.checkPsSeis(psseisdata[p]) is False:
-            return False
-    return True
+    return psseis_ays.checkPsSeis(psseisdata)
 
 
 def checkPointData(pointdata):
-    if pointdata is None or len(pointdata.keys()) < 1:
-        return False
-    for p in pointdata.keys():
-        if pointdata[p] is None:
-            return False
-        if point_ays.checkPoint(pointdata[p]) is False:
-            return False
-    return True
+    return point_ays.checkPoint(pointdata)
 
 
 def checkSettings(setting):

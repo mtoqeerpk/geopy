@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -125,14 +125,15 @@ class plot2dseisz(object):
         _translate = QtCore.QCoreApplication.translate
         Plot2DSeisZ.setWindowTitle(_translate("Plot2DSeisZ", "2D Window: Seismic Time/depth"))
         self.lblattrib.setText(_translate("Plot2DSeisZ", "Select target properties:"))
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _firstattrib = None
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgattrib)
-                item.setText(_translate("Plot2DSeisZ", i))
-                self.lwgattrib.addItem(item)
-                if _firstattrib is None:
-                    _firstattrib = item
+                if self.checkSeisData(i):
+                    item = QtWidgets.QListWidgetItem(self.lwgattrib)
+                    item.setText(_translate("Plot2DSeisZ", i))
+                    self.lwgattrib.addItem(item)
+                    if _firstattrib is None:
+                        _firstattrib = item
             self.lwgattrib.setCurrentItem(_firstattrib)
         self.lwgattrib.itemSelectionChanged.connect(self.changeLwgAttrib)
         #
@@ -168,8 +169,8 @@ class plot2dseisz(object):
         self.lblrange.setText(_translate("Plot2DSeisZ", "\t       Range:"))
         self.lblrangeto.setText(_translate("Plot2DSeisZ", "~~~"))
         if (self.checkSurvInfo() is True) \
-                and (self.checkSeisData() is True) \
-                and (self.lwgattrib.currentItem() is not None):
+                and (self.lwgattrib.currentItem() is not None) \
+                and (self.checkSeisData(self.lwgattrib.currentItem().text()) is True):
             _min, _max = self.getAttribRange(self.lwgattrib.currentItem().text())
             self.ldtmin.setText(_translate("Plot2DSeisZ", str(_min)))
             self.ldtmax.setText(_translate("Plot2DSeisZ", str(_max)))
@@ -284,8 +285,8 @@ class plot2dseisz(object):
         _min = -1
         _max = 1
         if (self.checkSurvInfo() is True) \
-                and (self.checkSeisData() is True)\
-                and (f in self.seisdata.keys()):
+                and (f in self.seisdata.keys()) \
+                and (self.checkSeisData(f) is True):
             _min = np.min(self.seisdata[f])
             _max = np.max(self.seisdata[f])
         return _min, _max
@@ -309,17 +310,10 @@ class plot2dseisz(object):
         return True
 
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("Plot2DSeisZ: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Plot Seismic Time/depth',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":

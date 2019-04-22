@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -73,8 +74,12 @@ class viewpsseis(object):
         ViewPsSeis.setWindowTitle(_translate("ViewPsSeis", "View Pre-stack Seismic " +self.psseisname))
         self.btnplot.setText(_translate("ViewPsSeis", "Plot"))
         self.btnplot.clicked.connect(self.clickBtnPlot)
-        self.twgpsseis.setColumnCount(8)
-        self.twgpsseis.setHorizontalHeaderLabels(["Shot", "Valid Trace No.", "Missing Trace No.", "Sample No.", "Maximum", "Minimum", "Mean", "Std"])
+        self.twgpsseis.setColumnCount(10)
+        self.twgpsseis.setHorizontalHeaderLabels(["Shot",
+                                                  "Trace No. per line", "Line No.",
+                                                  "Null Trace No.",
+                                                  "Sample No.", "Sample Interval",
+                                                  "Maximum", "Minimum", "Mean", "Std"])
         if self.checkPsSeis():
             # self.btncopy.setEnabled(True)
             self.btnplot.setEnabled(True)
@@ -91,23 +96,35 @@ class viewpsseis(object):
                 self.twgpsseis.setItem(_idx, 0, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
-                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['TraceNum']
-                                                          - len(self.psseisdata[i]['ShotInfo']['TraceMissing']))))
+                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['XLNum'])))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.twgpsseis.setItem(_idx, 1, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
-                item.setText(_translate("ViewPsSeis", str(len(self.psseisdata[i]['ShotInfo']['TraceMissing']))))
+                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['ILNum'])))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.twgpsseis.setItem(_idx, 2, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
-                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['ZNum'])))
+                item.setText(_translate("ViewPsSeis",
+                                        str(np.sum(self.psseisdata[i]['ShotInfo']['TraceFlag']).astype(int))))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.twgpsseis.setItem(_idx, 3, item)
+                #
+                item = QtWidgets.QTableWidgetItem()
+                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['ZNum'])))
+                item.setFlags(QtCore.Qt.ItemIsEditable)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.twgpsseis.setItem(_idx, 4, item)
+                #
+                item = QtWidgets.QTableWidgetItem()
+                item.setText(_translate("ViewPsSeis", str(self.psseisdata[i]['ShotInfo']['ZStep'])))
+                item.setFlags(QtCore.Qt.ItemIsEditable)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.twgpsseis.setItem(_idx, 5, item)
                 #
                 _data = self.psseisdata[i]['ShotData']
                 #
@@ -115,25 +132,25 @@ class viewpsseis(object):
                 item.setText(_translate("ViewPsSeis", str(np.max(_data))))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.twgpsseis.setItem(_idx, 4, item)
+                self.twgpsseis.setItem(_idx, 6, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(_translate("ViewPsSeis", str(np.min(_data))))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.twgpsseis.setItem(_idx, 5, item)
+                self.twgpsseis.setItem(_idx, 7, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(_translate("ViewPsSeis", str(np.mean(_data))))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.twgpsseis.setItem(_idx, 6, item)
+                self.twgpsseis.setItem(_idx, 8, item)
                 #
                 item = QtWidgets.QTableWidgetItem()
                 item.setText(_translate("ViewPsSeis", str(np.std(_data))))
                 item.setFlags(QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                self.twgpsseis.setItem(_idx, 7, item)
+                self.twgpsseis.setItem(_idx, 9, item)
                 #
                 _idx = _idx + 1
 

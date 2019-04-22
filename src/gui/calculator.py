@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -72,9 +73,9 @@ class calculator(object):
         _translate = QtCore.QCoreApplication.translate
         Calculator.setWindowTitle(_translate("Calculator", "Calculator"))
         self.lbloperator.setText(_translate("Calculator", "Select operator:"))
-        self.cbboperator.addItems(['Assign (x=v)', 'Add (x+v)', 'Multipy (x*v)', 'Inverse (1/x)',
-                                   'Opposite (-x)', 'Absolute(x)', 'Round(x)',
-                                   'Normalize'])
+        self.cbboperator.addItems(['Assign (x=v)', 'Add (x+v)', 'Multipy (x*v)', 'Power(x^v)',
+                                   'Inverse (1/x)', 'Opposite (-x)', 'Absolute(x)', 'Round(x)',
+                                   'Exponential (e^x)', 'Logarithm (log.x)'])
         self.cbboperator.currentIndexChanged.connect(self.changeCbbOperator)
         self.lblvalue.setText(_translate("Calculator", "Value (v) ="))
         self.ldtvalue.setText(_translate("Calculator", ""))
@@ -84,7 +85,7 @@ class calculator(object):
 
 
     def changeCbbOperator(self):
-        if self.cbboperator.currentIndex() <= 2:
+        if self.cbboperator.currentIndex() <= 3:
             self.lblvalue.setVisible(True)
             self.ldtvalue.setVisible(True)
         else:
@@ -103,7 +104,7 @@ class calculator(object):
                                            'No NumPy data added into calculator')
             return
         #
-        if self.cbboperator.currentIndex() < 3:
+        if self.cbboperator.currentIndex() < 4:
             _value = basic_data.str2float(self.ldtvalue.text())
             if _value is False:
                 print("Calculator: Non-float value")
@@ -119,18 +120,19 @@ class calculator(object):
         if self.cbboperator.currentIndex() == 2:
             self.data = self.data * _value
         if self.cbboperator.currentIndex() == 3:
-            self.data = np.reciprocal(self.data)
+            self.data = self.data ** _value
         if self.cbboperator.currentIndex() == 4:
-            self.data = - self.data
+            self.data = np.reciprocal(self.data)
         if self.cbboperator.currentIndex() == 5:
-            self.data = np.abs(self.data)
+            self.data = - self.data
         if self.cbboperator.currentIndex() == 6:
-            self.data = np.round(self.data)
+            self.data = np.abs(self.data)
         if self.cbboperator.currentIndex() == 7:
-            _vmin = np.min(self.data)
-            _vmax = np.max(self.data)
-            if _vmax > _vmin:
-                self.data = (self.data -_vmin) / (_vmax-_vmin)
+            self.data = np.round(self.data)
+        if self.cbboperator.currentIndex() == 8:
+            self.data = np.exp(self.data)
+        if self.cbboperator.currentIndex() == 9:
+            self.data = np.log(self.data)
         #
         # QtWidgets.QMessageBox.information(self.msgbox,
         #                                   "Calculator",

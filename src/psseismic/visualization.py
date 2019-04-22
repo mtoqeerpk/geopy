@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -34,80 +35,45 @@ def first_shot(ax, shotlist, pref='', surf=''):
     """Go to the first shot."""
     volume = ax.volume
     ax.index = 0
-    ax.images[0].set_array(volume[shotlist[ax.index]]['ShotData'])
-    ax.set_title(pref+shotlist[ax.index]+surf)
+    ax.set_title(pref + shotlist[ax.index] + surf)
     #
-    tracestart = volume[shotlist[ax.index]]['ShotInfo']['TraceStart']
-    traceend = volume[shotlist[ax.index]]['ShotInfo']['TraceEnd']
-    zstart = volume[shotlist[ax.index]]['ShotInfo']['ZStart']
-    zend = volume[shotlist[ax.index]]['ShotInfo']['ZEnd']
-    tracerange = volume[shotlist[ax.index]]['ShotInfo']['TraceRange']
-    zrange = volume[shotlist[ax.index]]['ShotInfo']['ZRange']
-    # ax.set_xticks(np.linspace(0, len(tracerange) - 1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(tracestart, traceend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
-    ax.set_aspect(float(len(tracerange)) / float(len(zrange)))
+    nsample = np.shape(volume[shotlist[ax.index]]['ShotData'])[0]
+    data = np.reshape(np.transpose(volume[shotlist[ax.index]]['ShotData'], [0, 2, 1]), [nsample, -1])
+    ax.images[0].set_array(data)
+
 
 
 def previous_shot(ax, shotlist, step=1, pref='', surf=''):
     """Go to the previous slice."""
     volume = ax.volume
     ax.index = (ax.index - step) % len(shotlist)  # wrap around using %
-    ax.images[0].set_array(volume[shotlist[ax.index]]['ShotData'])
     ax.set_title(pref + shotlist[ax.index] + surf)
     #
-    tracestart = volume[shotlist[ax.index]]['ShotInfo']['TraceStart']
-    traceend = volume[shotlist[ax.index]]['ShotInfo']['TraceEnd']
-    zstart = volume[shotlist[ax.index]]['ShotInfo']['ZStart']
-    zend = volume[shotlist[ax.index]]['ShotInfo']['ZEnd']
-    tracerange = volume[shotlist[ax.index]]['ShotInfo']['TraceRange']
-    zrange = volume[shotlist[ax.index]]['ShotInfo']['ZRange']
-    # ax.set_xticks(np.linspace(0, len(tracerange) - 1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(tracestart, traceend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
-    ax.set_aspect(float(len(tracerange)) / float(len(zrange)))
+    nsample = np.shape(volume[shotlist[ax.index]]['ShotData'])[0]
+    data = np.reshape(np.transpose(volume[shotlist[ax.index]]['ShotData'], [0, 2, 1]), [nsample, -1])
+    ax.images[0].set_array(data)
 
 
 def next_shot(ax, shotlist, step=1, pref='', surf=''):
     """Go to the next slice."""
     volume = ax.volume
     ax.index = (ax.index + step) % len(shotlist)  # wrap around using %
-    ax.images[0].set_array(volume[shotlist[ax.index]]['ShotData'])
     ax.set_title(pref + shotlist[ax.index] + surf)
     #
-    tracestart = volume[shotlist[ax.index]]['ShotInfo']['TraceStart']
-    traceend = volume[shotlist[ax.index]]['ShotInfo']['TraceEnd']
-    zstart = volume[shotlist[ax.index]]['ShotInfo']['ZStart']
-    zend = volume[shotlist[ax.index]]['ShotInfo']['ZEnd']
-    tracerange = volume[shotlist[ax.index]]['ShotInfo']['TraceRange']
-    zrange = volume[shotlist[ax.index]]['ShotInfo']['ZRange']
-    # ax.set_xticks(np.linspace(0, len(tracerange) - 1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(tracestart, traceend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
-    ax.set_aspect(float(len(tracerange)) / float(len(zrange)))
+    nsample = np.shape(volume[shotlist[ax.index]]['ShotData'])[0]
+    data = np.reshape(np.transpose(volume[shotlist[ax.index]]['ShotData'], [0, 2, 1]), [nsample, -1])
+    ax.images[0].set_array(data)
 
 
 def last_shot(ax, shotlist, pref='', surf=''):
     """Go to the last slice."""
     volume = ax.volume
     ax.index = -1
-    ax.images[0].set_array(volume[shotlist[ax.index]]['ShotData'])
     ax.set_title(pref + shotlist[ax.index] + surf)
     #
-    tracestart = volume[shotlist[ax.index]]['ShotInfo']['TraceStart']
-    traceend = volume[shotlist[ax.index]]['ShotInfo']['TraceEnd']
-    zstart = volume[shotlist[ax.index]]['ShotInfo']['ZStart']
-    zend = volume[shotlist[ax.index]]['ShotInfo']['ZEnd']
-    tracerange = volume[shotlist[ax.index]]['ShotInfo']['TraceRange']
-    zrange = volume[shotlist[ax.index]]['ShotInfo']['ZRange']
-    # ax.set_xticks(np.linspace(0, len(tracerange) - 1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(tracestart, traceend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
-    ax.set_aspect(float(len(tracerange)) / float(len(zrange)))
+    nsample = np.shape(volume[shotlist[ax.index]]['ShotData'])[0]
+    data = np.reshape(np.transpose(volume[shotlist[ax.index]]['ShotData'], [0, 2, 1]), [nsample, -1])
+    ax.images[0].set_array(data)
 
 
 def plotPsSeisShot(psseis, shotlist=None,
@@ -130,11 +96,11 @@ def plotPsSeisShot(psseis, shotlist=None,
         shot = shotlist[i]
         #
         if shot in psseis.keys():
-            tracestart = psseis[shot]['ShotInfo']['TraceStart']
-            traceend = psseis[shot]['ShotInfo']['TraceEnd']
+            tracestart = psseis[shot]['ShotInfo']['XLStart']
+            traceend = psseis[shot]['ShotInfo']['XLEnd']
             zstart = psseis[shot]['ShotInfo']['ZStart']
             zend = psseis[shot]['ShotInfo']['ZEnd']
-            tracerange = psseis[shot]['ShotInfo']['TraceRange']
+            tracerange = psseis[shot]['ShotInfo']['XLRange']
             zrange = psseis[shot]['ShotInfo']['ZRange']
             x, y = np.meshgrid(tracerange, zrange)
             #
@@ -228,22 +194,19 @@ def plotPsSeisShotPlayer(psseis, initshot=None,
     ax.index = shotlist.index(initshot)
     ax.set_title('Shot No. ' + shotlist[ax.index] + titlesurf)
     #
-    cat = ax.imshow(volume[shotlist[ax.index]]['ShotData'],
-                    cmap=vis_cmap.makeColorMap(colormap, flipcmap),
-                    interpolation=interpolation,
-                    vmin=valuemin, vmax=valuemax)
-    #
-    tracestart = volume[shotlist[ax.index]]['ShotInfo']['TraceStart']
-    traceend = volume[shotlist[ax.index]]['ShotInfo']['TraceEnd']
     zstart = volume[shotlist[ax.index]]['ShotInfo']['ZStart']
     zend = volume[shotlist[ax.index]]['ShotInfo']['ZEnd']
-    tracerange = volume[shotlist[ax.index]]['ShotInfo']['TraceRange']
-    zrange = volume[shotlist[ax.index]]['ShotInfo']['ZRange']
-    # ax.set_xticks(np.linspace(0, len(tracerange) - 1, 6, dtype=int))
-    # ax.set_xticklabels(np.linspace(tracestart, traceend, 6, dtype=int))
-    # ax.set_yticks(np.linspace(0, len(zrange) - 1, 6, dtype=int))
-    # ax.set_yticklabels(np.linspace(zstart, zend, 6, dtype=int))
-    ax.set_aspect(float(len(tracerange)) / float(len(zrange)))
+    #
+    ntrace = np.shape(volume[shotlist[ax.index]]['ShotData'])
+    ntrace = ntrace[1] * ntrace[2]
+    data = np.reshape(np.transpose(volume[shotlist[ax.index]]['ShotData'], [0, 2, 1]), [-1, ntrace])
+    cat = ax.imshow(data,
+                    cmap=vis_cmap.makeColorMap(colormap, flipcmap),
+                    aspect='auto', #float(len(tracerange)) / float(len(zrange)),
+                    extent=[1, ntrace, zend, zstart],
+                    interpolation=interpolation,
+                    vmin=valuemin, vmax=valuemax)
+
     #
     if colorbaron:
         fig.colorbar(cat)
@@ -258,6 +221,85 @@ def plotPsSeisShotPlayer(psseis, initshot=None,
     return
 
 
+def loadPsSeisShot(imagename, shots, ispref=True,
+                   inlnum=100, xlnum=100, znum=100,
+                   inlstart = 0, xlstart=0, zstart=0,
+                   inlstep=1, xlstep=1, zstep=-1,
+                   verbose=True, qpgsdlg=None):
+    """
+    Load pre-stack seismic shots from image files to 3D matrix
+    Argus:
+        imagename:  name of image files.
+        shots:      list of shot in array [inl1, inl2, ...]
+        ispref:     image name is given as pref
+                    'Shot_XXX.jpg' is added with XXX representing shot No.
+        inlnum:     number of inline slices fro create 3D matrix. Default is 100
+        xlnum:      number of crossline slices for creating 3D matrix. Default is 100
+        znum:       number of z slices for creating 3D matrix. Default is 100
+        verbose:    flag for message display. Default is True
+    Return:
+        psseis:     pre-stack seismic in a dictionary
+    Note:
+        Negative z is used in the vertical direction
+    """
+
+    if np.ndim(shots) != 1:
+        print('ERROR in loadPsSeisShot: 1D array of shot lists expected')
+        sys.exit()
+
+    xrange = np.linspace(0.0, 1.0, inlnum*xlnum)
+    zrange = np.linspace(0.0, -1.0, znum)
+
+    nshot = len(shots)
+    if verbose:
+        print('Load ' + str(nshot) + ' shot images to pre-stack seismic')
+
+    psseis = {}
+
+    if qpgsdlg is not None:
+        qpgsdlg.setMaximum(nshot)
+
+    for i in range(nshot):
+        #
+        if qpgsdlg is not None:
+            QtCore.QCoreApplication.instance().processEvents()
+            qpgsdlg.setValue(i)
+        #
+        if ispref:
+            shotpath = imagename + 'Shot_' + str(shots[i]) + '.jpg'
+        else:
+            shotpath = imagename[i]
+        #
+        data = plt.imread(shotpath).astype(float)
+        #
+        image_data = 0.2989 * data[:, :, 0] + 0.5870 * data[:, :, 1] + 0.1140 * data[:, :, 2]
+        if np.max(data[:, :, 0]) * np.max(data[:, :, 1]) * np.max(data[:, :, 2]) != 0:
+            image_data = image_data * 3.0 / (np.max(data[:, :, 0]) + np.max(data[:, :, 1]) + np.max(data[:, :, 2]))
+        if np.shape(data)[2] > 3:
+            image_data = image_data + 1.0 - data[:, :, 3]
+        #
+        image_x = np.linspace(0.0, 1.0, np.shape(image_data)[1])
+        image_z = np.linspace(-1.0, 0.0, np.shape(image_data)[0])
+        f_interp = interpolate.interp2d(image_x, image_z, image_data)
+
+        psdata = {}
+        psdata['ShotData'] = np.transpose(np.reshape(f_interp(xrange, zrange), [znum, inlnum, xlnum]),
+                                          [0, 2, 1])
+        psdata['ShotInfo'] = psseis_ays.createShotInfo(psdata['ShotData'],
+                                                       zstart=zstart, zstep=zstep,
+                                                       xlstart=xlstart, xlstep=xlstep,
+                                                       inlstart=inlstart, inlstep=inlstep)
+        #
+        psseis[str(shots[i])] = psdata
+    #
+    if qpgsdlg is not None:
+        qpgsdlg.setValue(nshot)
+
+    return psseis
+
+
 class visualization:
     plotPsSeisShot = plotPsSeisShot
     plotPsSeisShotPlayer = plotPsSeisShotPlayer
+    #
+    loadPsSeisShot = loadPsSeisShot

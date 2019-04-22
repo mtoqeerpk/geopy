@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -9,11 +10,10 @@ from PyQt5 import QtCore
 import os
 import sys
 import numpy as np
-import numpy.matlib as npmat
 import math
 #
-sys.path.append(os.path.dirname(__file__))
-from analysis import analysis as seis_ays
+sys.path.append(os.path.dirname(__file__)[:-8])
+from seismic.analysis import analysis as seis_ays
 from segpy.header import field
 from segpy.types import Int32
 import segpy.reader as syreader
@@ -23,6 +23,59 @@ from segpy.binary_reel_header import BinaryReelHeader
 from segpy.trace_header import TraceHeaderRev1
 
 __all__ = ['inputoutput']
+
+
+def readSeisDataFromSegy(segyfile, seisinfo, traceheaderformat=TraceHeaderRev1, endian='>',
+                         verbose=True, qpgsdlg=None):
+    inlstart = seisinfo['ILStart']
+    inlstep = seisinfo['ILStep']
+    inlnum = seisinfo['ILNum']
+    xlstart = seisinfo['XLStart']
+    xlstep = seisinfo['XLStep']
+    xlnum = seisinfo['XLNum']
+    znum = seisinfo['ZNum']
+    #
+    seisdata = np.zeros([znum, xlnum, inlnum])
+    traceflag = np.zeros([xlnum, inlnum])
+    #
+    traceheaderpacker = sypacker.HeaderPacker(traceheaderformat, endian)
+    dataformat = np.array([4, 4, 2, 4, 4, 0, 0, 1])
+    #
+    with open(segyfile, 'rb') as sid:
+        dat = syreader.create_reader(sid, trace_header_format=traceheaderformat, endian=endian)
+        binary_header = syreader.read_binary_reel_header(sid, endian=endian)
+        databyte = dataformat[binary_header.data_sample_format - 1]
+        #
+        pos = 3200 + 400
+        if qpgsdlg is not None:
+            qpgsdlg.setMaximum(inlnum*xlnum)
+        for itrace in dat.trace_indexes():
+            #
+            if qpgsdlg is not None:
+                QtCore.QCoreApplication.instance().processEvents()
+                qpgsdlg.setValue(itrace)
+            #
+            if verbose:
+                sys.stdout.write(
+                    '\r>>> Read %d traces: %.1f%% ' % (inlnum*xlnum, float(itrace)/float(inlnum*xlnum)*100))
+                sys.stdout.flush()
+            #
+            header = syreader.read_trace_header(sid, trace_header_packer=traceheaderpacker, pos=pos)
+            pos = pos + 240 + header.num_samples * databyte
+            #
+            idx_xl = int((header.crossline_number - xlstart) / xlstep)
+            idx_inl = int((header.inline_number - inlstart) / inlstep)
+            idx = idx_xl + idx_inl * xlnum
+            if idx < (inlnum * xlnum):
+                seisdata[:, idx_xl, idx_inl] = dat.trace_samples(itrace)
+                traceflag[idx_xl, idx_inl] = 0
+        #
+        if qpgsdlg is not None:
+            qpgsdlg.setValue(inlnum*xlnum)
+        if verbose:
+            print('Done')
+    #
+    return seisdata, traceflag
 
 
 def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'):
@@ -58,48 +111,47 @@ def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'
         negative z is used in the vertical direction
     """
 
-    # Initialize
-    seisinfo = {}
-
     # Check if file exist
     if os.path.isfile(segyfile) is False:
         print('ERROR in readSeisInfoFromSegy: ' + segyfile + ' not found')
         sys.exit()
 
     with open(segyfile, 'rb') as sid:
-        seisdata = syreader.create_reader(sid, trace_header_format=traceheaderformat, endian=endian)
-
-        if (seisdata.dimensionality != 3 and seisdata.dimensionality != 0):
-            print('ERROR in readSeis2DMatFromSegy: ' + segyfile + ' contains no seismic survey')
+        dat = syreader.create_reader(sid, trace_header_format=traceheaderformat, endian=endian)
+        #
+        if (dat.dimensionality > 3 and dat.dimensionality < 0):
+            print('ERROR in readSeisInfoFromSegy: ' + segyfile + ' contains no seismic survey')
             sys.exit()
 
-        if (seisdata.dimensionality == 0):
-            print('WARNING in readreadSeis2DMatFromSegy: ' + segyfile + ' contains 2D seismic survey')
+        if (dat.dimensionality == 0):
+            print('WARNING in readSeisInfoFromSegy: ' + segyfile + ' contains 2D seismic survey')
             inlstart = 0
             inlend = 0
             inlnum = 1
             xlstart = 0
-            xlend = seisdata.num_traces()-1
-            xlnum = seisdata.num_traces()
+            xlend = dat.num_traces() - 1
+            xlnum = dat.num_traces()
 
-        if (seisdata.dimensionality == 3):
-            inlstart = seisdata.inline_range()[0]
-            inlend = seisdata.inline_range()[-1]
-            inlnum = seisdata.num_inlines()
-            xlstart = seisdata.xline_range()[0]
-            xlend = seisdata.xline_range()[-1]
-            xlnum = seisdata.num_xlines()
+        if (dat.dimensionality == 3):
+            inlstart = dat.inline_range()[0]
+            inlend = dat.inline_range()[-1]
+            inlnum = dat.num_inlines()
+            xlstart = dat.xline_range()[0]
+            xlend = dat.xline_range()[-1]
+            xlnum = dat.num_xlines()
+
+        seisinfo = {}
 
         # Inline
         inlstep = 1
         if inlnum > 1:
-            inlstep = (inlend-inlstart) / (inlnum-1)
+            inlstep = (inlend - inlstart) / (inlnum - 1)
         inlstart = np.round(inlstart).astype(np.int32)
         inlstep = np.round(inlstep).astype(np.int32)
         inlnum = np.round(inlnum).astype(np.int32)
         if inlstep == 0:
             inlstep = 1
-        inlend = (inlstart + (inlnum-1)*inlstep).astype(np.int32)
+        inlend = (inlstart + (inlnum - 1) * inlstep).astype(np.int32)
         inlrange = np.linspace(inlstart, inlend, inlnum).astype(np.int32)
         # Add to seisinfo
         seisinfo['ILStart'] = inlstart
@@ -107,17 +159,16 @@ def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'
         seisinfo['ILStep'] = inlstep
         seisinfo['ILNum'] = inlnum
         seisinfo['ILRange'] = inlrange
-
         # Crossline
         xlstep = 1
         if xlnum > 1:
-            xlstep = (xlend-xlstart) / (xlnum-1)
+            xlstep = (xlend - xlstart) / (xlnum - 1)
         xlstart = np.round(xlstart).astype(np.int32)
         xlstep = np.round(xlstep).astype(np.int32)
         xlnum = np.round(xlnum).astype(np.int32)
         if xlstep == 0:
             xlstep = 1
-        xlend = (xlstart + (xlnum-1)*xlstep).astype(np.int32)
+        xlend = (xlstart + (xlnum - 1) * xlstep).astype(np.int32)
         xlrange = np.linspace(xlstart, xlend, xlnum).astype(np.int32)
         # Add to seisinfo
         seisinfo['XLStart'] = xlstart
@@ -125,11 +176,10 @@ def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'
         seisinfo['XLStep'] = xlstep
         seisinfo['XLNum'] = xlnum
         seisinfo['XLRange'] = xlrange
-
         # Z
-        zstart = seisdata.trace_header(0).lag_time_a
-        zstep = - seisdata.trace_header(0).sample_interval / 1000
-        znum = seisdata.trace_header(0).num_samples
+        zstart = dat.trace_header(0).lag_time_a
+        zstep = - dat.trace_header(0).sample_interval / 1000
+        znum = dat.trace_header(0).num_samples
         zstart = np.round(zstart).astype(np.int32)
         zstep = np.round(zstep).astype(np.int32)
         znum = np.round(znum).astype(np.int32)
@@ -137,7 +187,7 @@ def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'
             zstart = - zstart
         if zstep == 0:
             zstep = -1
-        zend = (zstart + (znum-1)*zstep).astype(np.int32)
+        zend = (zstart + (znum - 1) * zstep).astype(np.int32)
         zrange = np.linspace(zstart, zend, znum).astype(np.int32)
         # Add to seisinfo
         seisinfo['ZStart'] = zstart
@@ -146,14 +196,11 @@ def readSeisInfoFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'
         seisinfo['ZNum'] = znum
         seisinfo['ZRange'] = zrange
 
-        #
-        seisinfo['TraceNum'] = (inlnum * xlnum).astype(np.int64)
-        seisinfo['SampleNum'] = (seisinfo['TraceNum'] * znum).astype(np.int64)
-
     return seisinfo
 
 
-def readSeis2DMatFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'):
+def readSeis2DMatFromSegyWithInfo(segyfile, seisinfo=None, traceheaderformat=TraceHeaderRev1, endian='>',
+                                  verbose=True, qpgsdlg=None):
     """
     Read seismic data of a 3D seismic survey from a segy file, as a 2D matrix
     Args:
@@ -172,107 +219,40 @@ def readSeis2DMatFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>
 
     # Check if file exist
     if os.path.isfile(segyfile) == False:
-        print('ERROR in readSeis2DMatFromSegy: ' + segyfile + ' not found')
+        print('ERROR in readSeis2DMatFromSegyWithInfo: ' + segyfile + ' not found')
         sys.exit()
 
-    with open(segyfile, 'rb') as sid:
-        dat = syreader.create_reader(sid, trace_header_format=traceheaderformat, endian=endian)
+    if seisinfo is None or seis_ays.checkSeisInfo(seisinfo) is False:
+        seisinfo = readSeisInfoFromSegy(segyfile, traceheaderformat=traceheaderformat, endian=endian)
 
-        if (dat.dimensionality > 3 and dat.dimensionality < 0):
-            print('ERROR in readSeis2DMatFromSegy: ' + segyfile + ' contains no seismic survey')
-            sys.exit()
+    seis3dmat, traceflag = readSeis3DMatFromSegyWithInfo(segyfile, seisinfo,
+                                                         traceheaderformat=traceheaderformat, endian=endian,
+                                                         verbose=verbose, qpgsdlg=qpgsdlg)
 
-        if (dat.dimensionality == 0):
-            print('WARNING in readreadSeis2DMatFromSegy: ' + segyfile + ' contains 2D seismic survey')
-            inlstart = 0
-            inlend = 0
-            inlnum = 1
-            xlstart = 0
-            xlend = dat.num_traces()-1
-            xlnum = dat.num_traces()
-
-        if (dat.dimensionality == 3):
-            inlstart = dat.inline_range()[0]
-            inlend = dat.inline_range()[-1]
-            inlnum = dat.num_inlines()
-            xlstart = dat.xline_range()[0]
-            xlend = dat.xline_range()[-1]
-            xlnum = dat.num_xlines()
-
-        # Inline
-        inlstep = 1
-        if inlnum > 1:
-            inlstep = (inlend - inlstart) / (inlnum - 1)
-        inlstart = np.round(inlstart).astype(np.int32)
-        inlstep = np.round(inlstep).astype(np.int32)
-        inlnum = np.round(inlnum).astype(np.int32)
-        if inlstep == 0:
-            inlstep = 1
-        inlend = (inlstart + (inlnum - 1) * inlstep).astype(np.int32)
-        inlrange = np.linspace(inlstart, inlend, inlnum).astype(np.int32)
-
-        # Crossline
-        xlstep = 1
-        if xlnum > 1:
-            xlstep = (xlend - xlstart) / (xlnum - 1)
-        xlstart = np.round(xlstart).astype(np.int32)
-        xlstep = np.round(xlstep).astype(np.int32)
-        xlnum = np.round(xlnum).astype(np.int32)
-        if xlstep == 0:
-            xlstep = 1
-        xlend = (xlstart + (xlnum - 1) * xlstep).astype(np.int32)
-        xlrange = np.linspace(xlstart, xlend, xlnum).astype(np.int32)
-
-        # Z
-        zstart = dat.trace_header(0).lag_time_a
-        zstep = - dat.trace_header(0).sample_interval / 1000
-        znum = dat.trace_header(0).num_samples
-        zstart = np.round(zstart).astype(np.int32)
-        zstep = np.round(zstep).astype(np.int32)
-        znum = np.round(znum).astype(np.int32)
-        if zstart > 0:
-            zstart = - zstart
-        if zstep == 0:
-            zstep = -1
-        zend = (zstart + (znum - 1) * zstep).astype(np.int32)
-
-        zrange = np.linspace(zstart, zend, znum).astype(np.int32)
-
-        tracenum = (inlnum * xlnum).astype(np.int64)
-        samplenum = (tracenum * znum).astype(np.int64)
-
-        seisdata = np.zeros([znum, tracenum])
-
-        for itrace in dat.trace_indexes():
-            seisdata[:, itrace] = dat.trace_samples(itrace)
-            if itrace>=tracenum:
-                break
-
-    seisdata = seisdata.transpose()
-    seisdata = np.reshape(seisdata, [samplenum, 1])
-
-    # Add inline, crossline, and z information
-    inl = inlrange
-    inl = npmat.repmat(inl, znum*xlnum, 1)
-    inl = inl.transpose()
-    inl = np.reshape(inl, [samplenum, 1])
-    xl = xlrange
-    xl = npmat.repmat(xl, znum, 1)
-    xl = xl.transpose()
-    xl = np.reshape(xl, [xlnum*znum, 1])
-    xl = npmat.repmat(xl, 1, inlnum)
-    xl = xl.transpose()
-    xl = np.reshape(xl, [samplenum, 1])
-    z = zrange
-    z = npmat.repmat(z, 1, tracenum)
-    z = np.reshape(z, [samplenum, 1])
-
-    seis2dmat = np.concatenate((inl, xl, z, seisdata), axis=1)
+    seis2dmat = seis_ays.convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
 
     return seis2dmat
 
 
-def readSeis3DMatFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>'):
+def readSeis2DMatFromSegyNoInfo(segyfile, traceheaderformat=TraceHeaderRev1, endian='>',
+                                verbose=True, qpgsdlg=None):
+
+    # Check if file exist
+    if os.path.isfile(segyfile) == False:
+        print('ERROR in readSeis2DMatFromSegyNoInfo: ' + segyfile + ' not found')
+        sys.exit()
+
+    seis3dmat, seisinfo = readSeis3DMatFromSegyNoInfo(segyfile,
+                                                      traceheaderformat=traceheaderformat, endian=endian,
+                                                      verbose=verbose, qpgsdlg=qpgsdlg)
+
+    seis2dmat = seis_ays.convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
+
+    return seis2dmat
+
+
+def readSeis3DMatFromSegyWithInfo(segyfile, seisinfo=None, traceheaderformat=TraceHeaderRev1, endian='>',
+                                  verbose=True, qpgsdlg=None):
     """
     Read seismic data of a 3D seismic survey from a segy file, as a 3D matrix
     Args:
@@ -294,46 +274,142 @@ def readSeis3DMatFromSegy(segyfile, traceheaderformat=TraceHeaderRev1, endian='>
         print('ERROR in readSeis3DMatFromSegy: ' + segyfile + ' not found')
         sys.exit()
 
-    # seisdata = np.array([])
+    if seisinfo is None or seis_ays.checkSeisInfo(seisinfo) is False:
+        seisinfo = readSeisInfoFromSegy(segyfile, traceheaderformat=traceheaderformat, endian=endian)
+
+    seis3dmat, traceflag = readSeisDataFromSegy(segyfile, seisinfo,
+                                                traceheaderformat=traceheaderformat, endian=endian,
+                                                verbose=verbose, qpgsdlg=qpgsdlg)
+
+    return seis3dmat
+
+
+def readSeis3DMatFromSegyNoInfo(segyfile, traceheaderformat=TraceHeaderRev1, endian='>',
+                                verbose=True, qpgsdlg=None):
+
+    # Check if file exist
+    if os.path.isfile(segyfile) is False:
+        print('ERROR in readSeisInfoFromSegy: ' + segyfile + ' not found')
+        sys.exit()
+
+    traceheaderpacker = sypacker.HeaderPacker(traceheaderformat, endian)
+    dataformat = np.array([4, 4, 2, 4, 4, 0, 0, 1])
 
     with open(segyfile, 'rb') as sid:
         dat = syreader.create_reader(sid, trace_header_format=traceheaderformat, endian=endian)
-
-        if (dat.dimensionality != 3 and dat.dimensionality != 0):
-            print('ERROR in readSeis2DMatFromSegy: ' + segyfile + ' contains no seismic survey')
+        binary_header = syreader.read_binary_reel_header(sid, endian=endian)
+        databyte = dataformat[binary_header.data_sample_format - 1]
+        #
+        if (dat.dimensionality > 3 and dat.dimensionality < 0):
+            print('ERROR in readSeis3DMatFromSegyNoInfo: ' + segyfile + ' contains no seismic survey')
             sys.exit()
 
-        inlnum = 1
-        xlnum = 1
         if (dat.dimensionality == 0):
-            print('WARNING in readreadSeis2DMatFromSegy: ' + segyfile + ' contains 2D seismic survey')
+            print('WARNING in readSeis3DMatFromSegyNoInfo: ' + segyfile + ' contains 2D seismic survey')
+            inlstart = 0
+            inlend = 0
             inlnum = 1
+            xlstart = 0
+            xlend = dat.num_traces() - 1
             xlnum = dat.num_traces()
 
         if (dat.dimensionality == 3):
+            inlstart = dat.inline_range()[0]
+            inlend = dat.inline_range()[-1]
             inlnum = dat.num_inlines()
+            xlstart = dat.xline_range()[0]
+            xlend = dat.xline_range()[-1]
             xlnum = dat.num_xlines()
 
-        znum = dat.trace_header(0).num_samples
+        seisinfo = {}
 
+        # Inline
+        inlstep = 1
+        if inlnum > 1:
+            inlstep = (inlend - inlstart) / (inlnum - 1)
+        inlstart = np.round(inlstart).astype(np.int32)
+        inlstep = np.round(inlstep).astype(np.int32)
         inlnum = np.round(inlnum).astype(np.int32)
+        if inlstep == 0:
+            inlstep = 1
+        inlend = (inlstart + (inlnum - 1) * inlstep).astype(np.int32)
+        inlrange = np.linspace(inlstart, inlend, inlnum).astype(np.int32)
+        # Add to seisinfo
+        seisinfo['ILStart'] = inlstart
+        seisinfo['ILEnd'] = inlend
+        seisinfo['ILStep'] = inlstep
+        seisinfo['ILNum'] = inlnum
+        seisinfo['ILRange'] = inlrange
+        # Crossline
+        xlstep = 1
+        if xlnum > 1:
+            xlstep = (xlend - xlstart) / (xlnum - 1)
+        xlstart = np.round(xlstart).astype(np.int32)
+        xlstep = np.round(xlstep).astype(np.int32)
         xlnum = np.round(xlnum).astype(np.int32)
+        if xlstep == 0:
+            xlstep = 1
+        xlend = (xlstart + (xlnum - 1) * xlstep).astype(np.int32)
+        xlrange = np.linspace(xlstart, xlend, xlnum).astype(np.int32)
+        # Add to seisinfo
+        seisinfo['XLStart'] = xlstart
+        seisinfo['XLEnd'] = xlend
+        seisinfo['XLStep'] = xlstep
+        seisinfo['XLNum'] = xlnum
+        seisinfo['XLRange'] = xlrange
+        # Z
+        zstart = dat.trace_header(0).lag_time_a
+        zstep = - dat.trace_header(0).sample_interval / 1000
+        znum = dat.trace_header(0).num_samples
+        zstart = np.round(zstart).astype(np.int32)
+        zstep = np.round(zstep).astype(np.int32)
         znum = np.round(znum).astype(np.int32)
-
-        tracenum = (inlnum * xlnum).astype(np.int64)
-        seisdata = np.zeros([znum, tracenum])
-
+        if zstart > 0:
+            zstart = - zstart
+        if zstep == 0:
+            zstep = -1
+        zend = (zstart + (znum - 1) * zstep).astype(np.int32)
+        zrange = np.linspace(zstart, zend, znum).astype(np.int32)
+        # Add to seisinfo
+        seisinfo['ZStart'] = zstart
+        seisinfo['ZEnd'] = zend
+        seisinfo['ZStep'] = zstep
+        seisinfo['ZNum'] = znum
+        seisinfo['ZRange'] = zrange
+        #
+        seisdata = np.zeros([znum, xlnum, inlnum])
+        traceflag = np.zeros([xlnum, inlnum])
+        #
+        pos = 3200 + 400
+        if qpgsdlg is not None:
+            qpgsdlg.setMaximum(inlnum * xlnum)
         for itrace in dat.trace_indexes():
-            seisdata[:, itrace] = dat.trace_samples(itrace)
-            if itrace >= tracenum:
-                break
+            #
+            if qpgsdlg is not None:
+                QtCore.QCoreApplication.instance().processEvents()
+                qpgsdlg.setValue(itrace)
+            #
+            if verbose:
+                sys.stdout.write(
+                    '\r>>> Scan %s: %d traces ' % (segyfile, itrace + 1))
+                sys.stdout.flush()
+            #
+            header = syreader.read_trace_header(sid, trace_header_packer=traceheaderpacker, pos=pos)
+            pos = pos + 240 + header.num_samples * databyte
+            #
+            idx_xl = int((header.crossline_number - xlstart) / xlstep)
+            idx_inl = int((header.inline_number - inlstart) / inlstep)
+            idx = idx_xl + idx_inl * xlnum
+            if idx < (inlnum * xlnum):
+                seisdata[:, idx_xl, idx_inl] = dat.trace_samples(itrace)
+                traceflag[idx_xl, idx_inl] = 0
+        #
+        if qpgsdlg is not None:
+            qpgsdlg.setValue(inlnum * xlnum)
+        if verbose:
+            print('Done')
 
-    seisdata = seisdata.transpose()
-
-    seis3dmat = np.reshape(seisdata, [inlnum, xlnum, znum])
-    seis3dmat = seis3dmat.transpose()
-
-    return seis3dmat
+    return seisdata, seisinfo
 
 
 def writeSeis2DMatToSegyWithRef(seis2dmat, seisfile,
@@ -773,8 +849,8 @@ def createSegyTextualHeader():
         header: A tuple of forty Unicode strings containing the transcoded header data.
     """
     header = ()
-    header = header + ('C01 Created By: seisvolume_inputoutput                                          ',)
-    header = header + ('C02 Author: Haibin Di (haibin.di@outlook.com)                                   ',)
+    header = header + ('C01 Created By: GeoPy                                                           ',)
+    header = header + ('C02                                                                             ',)
     header = header + ('C03                                                                             ',)
     header = header + ('C04                                                                             ',)
     header = header + ('C05                                                                             ',)
@@ -990,8 +1066,11 @@ class inputoutput:
     # pack all functions as a class
     #
     readSeisInfoFromSegy = readSeisInfoFromSegy
-    readSeis2DMatFromSegy = readSeis2DMatFromSegy
-    readSeis3DMatFromSegy = readSeis3DMatFromSegy
+    readSeisDataFromSegy = readSeisDataFromSegy
+    readSeis2DMatFromSegyWithInfo = readSeis2DMatFromSegyWithInfo
+    readSeis3DMatFromSegyWithInfo = readSeis3DMatFromSegyWithInfo
+    readSeis2DMatFromSegyNoInfo = readSeis2DMatFromSegyNoInfo
+    readSeis3DMatFromSegyNoInfo = readSeis3DMatFromSegyNoInfo
     #
     writeSeis2DMatToSegyWithRef = writeSeis2DMatToSegyWithRef
     writeSeis3DMatToSegyWithRef = writeSeis3DMatToSegyWithRef

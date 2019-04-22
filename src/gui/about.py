@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -58,9 +59,9 @@ class about(object):
         self.lbltitle.setText(_translate("About", "GeoPy"))
         self.lbltitle.setFont(QtGui.QFont("Helvetica", 16, QtGui.QFont.Bold))
         self.lbltitle.setAlignment(QtCore.Qt.AlignTop)
-        self.lbldate.setText(_translate("About", "Version 2019\nBuilt on PyQt5, Numpy, Matlibplot, Scipy\nMachine learning on TensorFlow 1.8+"))
+        self.lbldate.setText(_translate("About", "Version 2019a\nBuilt on PyQt5, Numpy, Matlibplot, Scipy\n"))
         self.lblcopyright.setText(_translate("About", "Copyright (C) 2018-2019          \n\n\tMore information? Scan me"))
-        self.lbllink.setText(_translate("About", '<a href="https://geopyinfo.wixsite.com/geopy">GeoPy Team</a>'))
+        self.lbllink.setText(_translate("About", '<a href="https://geopyinfo.wixsite.com/geopy">GeoPy</a>'))
         self.lbllink.setOpenExternalLinks(True)
         self.lblqr.setPixmap(
             QtGui.QPixmap(os.path.join(self.iconpath, "icons/qrcode.png")).scaled(50, 50, QtCore.Qt.KeepAspectRatio))

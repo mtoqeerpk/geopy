@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -14,6 +14,7 @@ import os, sys
 #
 sys.path.append(os.path.dirname(__file__)[:-4])
 from seismic.analysis import analysis as seis_ays
+from pointset.analysis import analysis as point_ays
 from basic.data import data as basic_data
 from basic.matdict import matdict as basic_mdt
 
@@ -194,7 +195,7 @@ class rtrvseisprop(object):
                                            'No property selected for export')
             return
         #
-        if self.checkSeisSurvey() is False:
+        if self.checkSeisData() is False:
             print("RtrvSeisProp: No seismic data loaded")
             QtWidgets.QMessageBox.critical(self.msgbox,
                                            'Retrieve Seismic Property',
@@ -272,14 +273,8 @@ class rtrvseisprop(object):
         self.msgbox.setGeometry(QtCore.QRect(_center_x - 150, _center_y - 50, 300, 100))
 
 
-    def checkSeisSurvey(self):
-        if (len(self.seisdata.keys()) < 1) \
-                or ('Inline' not in self.seisdata.keys()) \
-                or ('Crossline' not in self.seisdata.keys()) \
-                or ('Z' not in self.seisdata.keys()):
-            return False
-        return True
-
+    def checkSeisData(self):
+        return point_ays.checkPoint(self.seisdata)
 
 
 if __name__ == "__main__":

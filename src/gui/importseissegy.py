@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     April 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -36,7 +36,7 @@ class importseissegy(object):
 
     def setupGUI(self, ImportSeisSegy):
         ImportSeisSegy.setObjectName("ImportSeisSegy")
-        ImportSeisSegy.setFixedSize(480, 330)
+        ImportSeisSegy.setFixedSize(480, 320)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(os.path.join(self.iconpath, "icons/segy.png")),
                        QtGui.QIcon.Normal,
@@ -158,6 +158,7 @@ class importseissegy(object):
         self.cbbxl.setCurrentIndex(192)
         #
         self.btnimport.setText(_translate("ImportSeisSegy", "Import SEG-Y"))
+        self.btnimport.setDefault(True)
         self.btnimport.clicked.connect(self.clickBtnImport)
 
 
@@ -251,7 +252,6 @@ class importseissegy(object):
         _pgsdlg.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         _pgsdlg.forceShow()
         _pgsdlg.setFixedWidth(400)
-        _pgsdlg.setMaximum(_nfile)
         #
         _seisdata = {}
         #
@@ -269,46 +269,30 @@ class importseissegy(object):
         #
         for i in range(_nfile):
             #
-            QtCore.QCoreApplication.instance().processEvents()
+            _pgsdlg.setWindowTitle('Import ' + str(i + 1) + ' of ' + str(_nfile) + ' Seismic SEG-Y')
             #
             _filename = self.segylist[i]
             print("ImportSeisSegy: Import %d of %d SEG-Y: %s" % (i + 1, _nfile, _filename))
-            _segydata = seis_io.readSeis3DMatFromSegy(_filename, traceheaderformat=_traceheaderformat)
-            _filenamemain = os.path.splitext(os.path.basename(_filename))[0]
-            _seisdata[_filenamemain] = np.reshape(np.transpose(_segydata, [2, 1, 0]), [-1, 1])
-            #
-            _pgsdlg.setValue(i + 1)
+            _segydata = seis_io.readSeis3DMatFromSegyWithInfo(_filename, seisinfo=_survinfo,
+                                                              traceheaderformat=_traceheaderformat,
+                                                              qpgsdlg=_pgsdlg)
+            _segydata = np.reshape(np.transpose(_segydata, [2, 1, 0]), [-1, 1])
+            if checkSeisData(_segydata, _survinfo):
+                _filenamemain = os.path.splitext(os.path.basename(_filename))[0]
+                _seisdata[_filenamemain] = _segydata
             #
         # add new data to seisdata
-        if checkSurvInfo(self.survinfo) is False:
-            self.seisdata = _seisdata
+        if checkSurvInfo(_survinfo):
             self.survinfo = _survinfo
-        else:
-            if checkSurvInfo(_survinfo) \
-                    and np.array_equal(self.survinfo['ILRange'], _survinfo['ILRange']) \
-                    and np.array_equal(self.survinfo['XLRange'], _survinfo['XLRange']) \
-                    and np.array_equal(self.survinfo['ZRange'], _survinfo['ZRange']):
-                for key in _seisdata.keys():
-                    if key in self.seisdata.keys():
-                        reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic SEG-Y',
-                                                               key + ' already exists. Overwrite?',
-                                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                               QtWidgets.QMessageBox.No)
-                        if reply == QtWidgets.QMessageBox.No:
-                            return
-                    self.seisdata[key] = _seisdata[key]
-            else:
+        for key in _seisdata.keys():
+            if key in self.seisdata.keys() and checkSeisData(self.seisdata[key], self.survinfo):
                 reply = QtWidgets.QMessageBox.question(self.msgbox, 'Import Seismic SEG-Y',
-                                                       'Survey does not match with imported seismic. Overwrite?',
+                                                       key + ' already exists. Overwrite?',
                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                        QtWidgets.QMessageBox.No)
                 if reply == QtWidgets.QMessageBox.No:
                     return
-                self.seisdata = _seisdata
-                self.survinfo = _survinfo
-        #
-        self.checkSurvInfo()
-        self.checkSeisData()
+            self.seisdata[key] = _seisdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Import Seismic SEG-Y",
@@ -323,39 +307,12 @@ class importseissegy(object):
         self.msgbox.setGeometry(QtCore.QRect(_center_x - 150, _center_y - 50, 300, 100))
 
 
-    def checkSurvInfo(self):
-        self.refreshMsgBox()
-        #
-        if checkSurvInfo(self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'Import Seismic SEG-Y',
-                                           'No survey found')
-            return
-
-
-    def checkSeisData(self):
-        self.refreshMsgBox()
-        #
-        if checkSeisData(self.seisdata, self.survinfo) is False:
-            QtWidgets.QMessageBox.critical(self.msgbox,
-                                           'Import Seismic SEG-Y',
-                                            'Seismic & survey not match')
-            return
-
-
 def checkSurvInfo(survinfo):
     return seis_ays.checkSeisInfo(survinfo)
 
 
-def checkSeisData(seisdata, survinfo={}):
-    if seis_ays.checkSeisInfo(survinfo) is False:
-        return False
-    if seisdata is None:
-        return False
-    for f in seisdata.keys():
-        if np.shape(seisdata[f])[0] != survinfo['SampleNum']:
-            return False
-    return True
+def checkSeisData(seisdata, survinfo):
+    return seis_ays.isSeis2DMatConsistentWithSeisInfo(seisdata, survinfo)
 
 
 if __name__ == "__main__":

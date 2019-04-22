@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -166,12 +167,21 @@ class convertpointset2seis(object):
                                            'Non-float undefined value')
             return
         #
-        if (self.checkSurvInfo() is False) and (self.checkSeisData() is False):
+        if checkSurvInfo(self.survinfo) is False:
             print("ConvertPointSet2Seis: No seismic survey found for conversion")
             QtWidgets.QMessageBox.critical(self.msgbox,
                                            'Convert PointSet to Seismic',
                                            'No seismic survey found for conversion')
             return
+        #
+        for _f in _attriblist:
+            if _f in self.seisdata.keys() and checkSeisData(self.seisdata[_f], self.survinfo):
+                reply = QtWidgets.QMessageBox.question(self.msgbox, 'Convert PointSet to Seismic',
+                                                       _f + ' already exists. Overwrite?',
+                                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                       QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.No:
+                    return
         #
         _survinfo = self.survinfo
         for _f in _attriblist:
@@ -222,30 +232,11 @@ class convertpointset2seis(object):
     def checkPointSet(self, name):
         return point_ays.checkPoint(self.pointdata[name])
 
+def checkSurvInfo(survinfo):
+    return seis_ays.checkSeisInfo(survinfo)
 
-    def checkSurvInfo(self):
-        self.refreshMsgBox()
-        #
-        if seis_ays.checkSeisInfo(self.survinfo) is False:
-            # print("ConvertPointSet2Seis: Survey not found")
-            # QtWidgets.QMessageBox.critical(self.msgbox,
-            #                                'Convert PointSet to Seismic',
-            #                                'Survey not found')
-            return False
-        return True
-
-
-    def checkSeisData(self):
-        self.refreshMsgBox()
-        #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ConvertPointSet2Seis: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Convert PointSet to Seismic',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+def checkSeisData(seisdata, survinfo):
+    return seis_ays.isSeis2DMatConsistentWithSeisInfo(seisdata, survinfo)
 
 
 if __name__ == "__main__":

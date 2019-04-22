@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -84,7 +84,7 @@ class manageseis(object):
         _gui = gui_editseispointset()
         _gui.seispointdata = self.seisdata
         # add info
-        if self.checkSurvInfo() and self.checkSeisData():
+        if self.checkSurvInfo():
             _survinfo = seis_ays.convertSeisInfoTo2DMat(self.survinfo)
             _gui.seispointdata['Inline'] = _survinfo[:, 0:1]
             _gui.seispointdata['Crossline'] = _survinfo[:, 1:2]
@@ -108,74 +108,75 @@ class manageseis(object):
     def refreshTwgSeis(self):
         self.twgseis.clear()
         self.twgseis.setHorizontalHeaderLabels(["Property", "Dimensions", "Maximum", "Minimum", "Mean", "Std"])
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _idx = 0
             self.twgseis.setRowCount(len(self.seisdata.keys()))
             for i in sorted(self.seisdata.keys()):
-                if i != "Inline" and i != "Crossline" and i != "Z":
+                if self.checkSeisData(i):
+                    if i != "Inline" and i != "Crossline" and i != "Z":
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(i)
+                        item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                        self.twgseis.setItem(_idx, 0, item)
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(str(np.shape(self.seisdata[i])[1:]))
+                        item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        item.setFlags(QtCore.Qt.ItemIsEditable)
+                        self.twgseis.setItem(_idx, 1, item)
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(str(np.max(self.seisdata[i])))
+                        item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        item.setFlags(QtCore.Qt.ItemIsEditable)
+                        self.twgseis.setItem(_idx, 2, item)
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(str(np.min(self.seisdata[i])))
+                        item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        item.setFlags(QtCore.Qt.ItemIsEditable)
+                        self.twgseis.setItem(_idx, 3, item)
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(str(np.mean(self.seisdata[i])))
+                        item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        item.setFlags(QtCore.Qt.ItemIsEditable)
+                        self.twgseis.setItem(_idx, 4, item)
+                        item = QtWidgets.QTableWidgetItem()
+                        item.setText(str(np.std(self.seisdata[i])))
+                        item.setTextAlignment(QtCore.Qt.AlignCenter)
+                        item.setFlags(QtCore.Qt.ItemIsEditable)
+                        self.twgseis.setItem(_idx, 5, item)
+                        _idx = _idx + 1
+                if "Inline" in self.seisdata.keys():
                     item = QtWidgets.QTableWidgetItem()
-                    item.setText(i)
-                    item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    item.setText("Inline")
+                    item.setFlags(QtCore.Qt.ItemIsEditable)
                     self.twgseis.setItem(_idx, 0, item)
                     item = QtWidgets.QTableWidgetItem()
-                    item.setText(str(np.shape(self.seisdata[i])[1:]))
+                    item.setText(str(np.shape(self.seisdata['Inline'])[1:]))
                     item.setTextAlignment(QtCore.Qt.AlignCenter)
                     item.setFlags(QtCore.Qt.ItemIsEditable)
                     self.twgseis.setItem(_idx, 1, item)
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setText(str(np.max(self.seisdata[i])))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    item.setFlags(QtCore.Qt.ItemIsEditable)
-                    self.twgseis.setItem(_idx, 2, item)
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setText(str(np.min(self.seisdata[i])))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    item.setFlags(QtCore.Qt.ItemIsEditable)
-                    self.twgseis.setItem(_idx, 3, item)
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setText(str(np.mean(self.seisdata[i])))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    item.setFlags(QtCore.Qt.ItemIsEditable)
-                    self.twgseis.setItem(_idx, 4, item)
-                    item = QtWidgets.QTableWidgetItem()
-                    item.setText(str(np.std(self.seisdata[i])))
-                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                    item.setFlags(QtCore.Qt.ItemIsEditable)
-                    self.twgseis.setItem(_idx, 5, item)
                     _idx = _idx + 1
-            if "Inline" in self.seisdata.keys():
-                item = QtWidgets.QTableWidgetItem()
-                item.setText("Inline")
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 0, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setText(str(np.shape(self.seisdata['Inline'])[1:]))
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 1, item)
-                _idx = _idx + 1
-            if "Crossline" in self.seisdata.keys():
-                item = QtWidgets.QTableWidgetItem()
-                item.setText("Crossline")
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 0, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setText(str(np.shape(self.seisdata['Crossline'])[1:]))
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 1, item)
-                _idx = _idx + 1
-            if "Z" in self.seisdata.keys():
-                item = QtWidgets.QTableWidgetItem()
-                item.setText("Z")
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 0, item)
-                item = QtWidgets.QTableWidgetItem()
-                item.setText(str(np.shape(self.seisdata['Z'])[1:]))
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
-                item.setFlags(QtCore.Qt.ItemIsEditable)
-                self.twgseis.setItem(_idx, 1, item)
-                _idx = _idx + 1
+                if "Crossline" in self.seisdata.keys():
+                    item = QtWidgets.QTableWidgetItem()
+                    item.setText("Crossline")
+                    item.setFlags(QtCore.Qt.ItemIsEditable)
+                    self.twgseis.setItem(_idx, 0, item)
+                    item = QtWidgets.QTableWidgetItem()
+                    item.setText(str(np.shape(self.seisdata['Crossline'])[1:]))
+                    item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    item.setFlags(QtCore.Qt.ItemIsEditable)
+                    self.twgseis.setItem(_idx, 1, item)
+                    _idx = _idx + 1
+                if "Z" in self.seisdata.keys():
+                    item = QtWidgets.QTableWidgetItem()
+                    item.setText("Z")
+                    item.setFlags(QtCore.Qt.ItemIsEditable)
+                    self.twgseis.setItem(_idx, 0, item)
+                    item = QtWidgets.QTableWidgetItem()
+                    item.setText(str(np.shape(self.seisdata['Z'])[1:]))
+                    item.setTextAlignment(QtCore.Qt.AlignCenter)
+                    item.setFlags(QtCore.Qt.ItemIsEditable)
+                    self.twgseis.setItem(_idx, 1, item)
+                    _idx = _idx + 1
 
 
     def refreshMsgBox(self):
@@ -196,17 +197,10 @@ class manageseis(object):
         return True
 
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ManageSeis: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Manage Seismic',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 

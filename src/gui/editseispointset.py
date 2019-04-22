@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -86,6 +86,7 @@ class editseispointset(object):
         self.cbbaction.setItemIcon(2, QtGui.QIcon(os.path.join(self.iconpath, "icons/delete.png")))
         self.cbbaction.setItemIcon(3, QtGui.QIcon(os.path.join(self.iconpath, "icons/retrieve.png")))
         self.cbbaction.setItemIcon(4, QtGui.QIcon(os.path.join(self.iconpath, "icons/math.png")))
+        self.cbbaction.setCurrentIndex(4)
         self.cbbaction.currentIndexChanged.connect(self.changeCbbAction)
         self.ldtrename.setText(_translate("EditSeisPointSet", ""))
         self.ldtrename.setVisible(False)
@@ -115,7 +116,7 @@ class editseispointset(object):
             return
         #
         if self.cbbaction.currentIndex() == 0:
-            self.seispointdata[_attriblist[0].text()+'_copy'] = self.seispointdata[_attriblist[0].text()]
+            self.seispointdata[_attriblist[0].text()+'_copy'] = self.seispointdata[_attriblist[0].text()].copy()
         if self.cbbaction.currentIndex() == 1:
             if len(self.ldtrename.text()) < 1:
                 print("EditSeisPointSet: No name specified for rename")

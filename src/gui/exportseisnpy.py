@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -81,11 +81,12 @@ class exportseisnpy(object):
         _translate = QtCore.QCoreApplication.translate
         ExportSeisNpy.setWindowTitle(_translate("ExportSeisNpy", "Export Seismic NumPy"))
         self.lblattrib.setText(_translate("ExportSeisNpy", "Select output properties:"))
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgattrib)
-                item.setText(_translate("ExportSeisNpy", i))
-                self.lwgattrib.addItem(item)
+                if self.checkSeisData(i):
+                    item = QtWidgets.QListWidgetItem(self.lwgattrib)
+                    item.setText(_translate("ExportSeisNpy", i))
+                    self.lwgattrib.addItem(item)
             self.lwgattrib.selectAll()
         self.lbltype.setText(_translate("ExportSeisNpy", "Select output type:"))
         self.cbbtype.addItems(['Dictionary', '2-D numpy matrix', '3-D numpy matrix'])
@@ -203,17 +204,10 @@ class exportseisnpy(object):
             return False
         return True
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ExportSeisNpy: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Export Seismic NumPy',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 

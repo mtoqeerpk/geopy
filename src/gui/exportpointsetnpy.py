@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -145,7 +146,7 @@ class exportpointsetnpy(object):
             np.save(os.path.join(_savepath, _savename), _npydata)
         if self.cbbtype.currentIndex() == 1:
             reply = QtWidgets.QMessageBox.question(self.msgbox, 'Export PointSet Numpy',
-                                                   'Warning: property header not saved innumpy matrix. Continue?',
+                                                   'Warning: property header not saved in numpy matrix. Continue?',
                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                    QtWidgets.QMessageBox.No)
 

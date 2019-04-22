@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -135,45 +136,38 @@ class convertpsseis2seis(object):
             return
         #
         _psseisdata = self.psseisdata[_psseislist[0]][_psshotlist[0]]['ShotData']
-        _nz, _nt = np.shape(_psseisdata)
-        _psseisdata = np.reshape(_psseisdata, [_nz, _nt, 1])
-        if self.checkSurvInfo() \
+        _psseisinfo = self.psseisdata[_psseislist[0]][_psshotlist[0]]['ShotInfo']
+        _nz, _nt, _nl = np.shape(_psseisdata)
+        if checkSurvInfo(self.survinfo) \
                 and self.survinfo['ZNum'] == np.shape(_psseisdata)[0] \
                 and self.survinfo['XLNum'] == np.shape(_psseisdata)[1] \
                 and self.survinfo['ILNum'] == np.shape(_psseisdata)[2]:
             _survinfo = self.survinfo
         else:
-            _survinfo = seis_ays.createSeisInfoFrom3DMat(_psseisdata)
+            _survinfo = seis_ays.createSeisInfoFrom3DMat(_psseisdata,
+                                                         zstart=_psseisinfo['ZStart'],
+                                                         zstep=_psseisinfo['ZStep'],
+                                                         xlstart=_psseisinfo['XLStart'],
+                                                         xlstep=_psseisinfo['XLStep'],
+                                                         inlstart=_psseisinfo['ILStart'],
+                                                         inlstep=_psseisinfo['ILStep']
+                                                         )
         #
         _seisdata = {}
         _seisdata[_psshotlist[0]] = np.reshape(np.transpose(_psseisdata, [2, 1, 0]), [-1, 1])
         #
         # add new data to seisdata
-        if self.checkSurvInfo() is False:
-            self.seisdata = _seisdata
+        if checkSurvInfo(_survinfo):
             self.survinfo = _survinfo
-        else:
-            if np.array_equal(self.survinfo['ILRange'], _survinfo['ILRange']) \
-                    and np.array_equal(self.survinfo['XLRange'], _survinfo['XLRange']) \
-                    and np.array_equal(self.survinfo['ZRange'], _survinfo['ZRange']):
-                for key in _seisdata.keys():
-                    if key in self.seisdata.keys():
-                        reply = QtWidgets.QMessageBox.question(self.msgbox, 'Convert Pre-stack to Seismic',
-                                                               key + ' already exists. Overwrite?',
-                                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
-                                                               QtWidgets.QMessageBox.No)
-                        if reply == QtWidgets.QMessageBox.No:
-                            return
-                    self.seisdata[key] = _seisdata[key]
-            else:
+        for key in _seisdata.keys():
+            if key in self.seisdata.keys() and checkSeisData(self.seisdata[key], self.survinfo):
                 reply = QtWidgets.QMessageBox.question(self.msgbox, 'Convert Pre-stack to Seismic',
-                                                       'Survey does not match with converted seismic. Overwrite?',
+                                                       key + ' already exists. Overwrite?',
                                                        QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                        QtWidgets.QMessageBox.No)
                 if reply == QtWidgets.QMessageBox.No:
                     return
-                self.seisdata = _seisdata
-                self.survinfo = _survinfo
+            self.seisdata[key] = _seisdata[key]
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Convert Pre-stack to Seismic",
@@ -191,16 +185,11 @@ class convertpsseis2seis(object):
         return psseis_ays.checkPsSeis(self.psseisdata[name])
 
 
-    def checkSurvInfo(self):
-        self.refreshMsgBox()
-        #
-        if seis_ays.checkSeisInfo(self.survinfo) is False:
-            # print("ConvertPsSeis2Seis: Survey not found")
-            # QtWidgets.QMessageBox.critical(self.msgbox,
-            #                                'Convert PointSet to Seismic',
-            #                                'Survey not found')
-            return False
-        return True
+def checkSurvInfo(survinfo):
+    return seis_ays.checkSeisInfo(survinfo)
+
+def checkSeisData(seisdata, survinfo):
+    return seis_ays.isSeis2DMatConsistentWithSeisInfo(seisdata, survinfo)
 
 
 if __name__ == "__main__":

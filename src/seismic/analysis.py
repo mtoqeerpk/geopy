@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -131,10 +132,6 @@ def getSeisInfoFrom2DMat(seis2dmat, inlcol=0, xlcol=1, zcol=2):
     seisinfo['ILNum'] = inlnum
     seisinfo['ILRange'] = inlrange
 
-    #
-    seisinfo['TraceNum'] = (inlnum * xlnum).astype(np.int64)
-    seisinfo['SampleNum'] = (seisinfo['TraceNum'] * znum).astype(np.int64)
-
     return seisinfo
 
 
@@ -165,8 +162,7 @@ def checkSeisInfo(seisinfo):
 
     info = ['ILStart', 'ILEnd', 'ILStep', 'ILNum', 'ILRange',
             'XLStart', 'XLEnd', 'XLStep', 'XLNum', 'XLRange',
-            'ZStart', 'ZEnd', 'ZStep', 'ZNum', 'ZRange',
-            'TraceNum', 'SampleNum']
+            'ZStart', 'ZEnd', 'ZStep', 'ZNum', 'ZRange']
 
     if seisinfo is None:
         return False
@@ -198,8 +194,29 @@ def makeSeisInfo(inlstart=0, inlstep=0, inlnum=0,
     seisinfo['ZStep'] = zstep
     seisinfo['ZNum'] = znum
     seisinfo['ZRange'] = np.linspace(0, inlnum-1, 1) * zstep + zstart
-    seisinfo['TraceNum'] = (inlnum * xlnum)
-    seisinfo['SampleNum'] = (seisinfo['TraceNum'] * znum)
+
+
+def isSeis2DMatConsistentWithSeisInfo(seis2dmat, seisinfo):
+    if checkSeisInfo(seisinfo) is False:
+        return False
+    if np.ndim(seis2dmat) < 2:
+        return False
+    if np.shape(seis2dmat)[0] != \
+            np.int64(seisinfo['ILNum']) * np.int64(seisinfo['XLNum']) * np.int64(seisinfo['ZNum']):
+        return False
+    return True
+
+
+def isSeis3DMatConsistentWithSeisInfo(seis3dmat, seisinfo):
+    if checkSeisInfo(seisinfo) is False:
+        return False
+    if np.ndim(seis3dmat) < 3:
+        return False
+    if np.shape(seis3dmat)[0] != seisinfo['ZNum'] \
+            or np.shape(seis3dmat)[1] != seisinfo['XLNum'] \
+            or np.shape(seis3dmat)[2] != seisinfo['ILNum']:
+        return False
+    return True
 
 
 
@@ -288,9 +305,6 @@ def createSeisInfoFrom3DMat(seis3dmat, inlstart=0, inlstep=1,
     seisinfo['ZStep'] = zstep
     seisinfo['ZNum'] = znum
     seisinfo['ZRange'] = zrange
-
-    seisinfo['TraceNum'] = (inlnum * xlnum).astype(np.int64)
-    seisinfo['SampleNum'] = (seisinfo['TraceNum'] * znum).astype(np.int64)
 
     return seisinfo
 
@@ -820,10 +834,10 @@ def retrieveSeisILSliceFrom3DMat(seis3dmat, inlsls=None, seisinfo=None,
         print('WARNING in retrieveSeisILSliceFrom3DMat: Survey info auto-generated from 3D seismic matrix')
         seisinfo = createSeisInfoFrom3DMat(seis3dmat)
 
-    seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
 
     if inlsls is None:
         print('WARNING in retrieveSeisILSliceFrom3DMat: to retrieve all inline slices in 3D seismic matrix')
+        seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
         seisloc = seis2dmat[:, 0:3]
         seisdata = seis2dmat[:, 3]
         seisdata = np.reshape(seisdata, [len(seisdata), 1])
@@ -833,10 +847,6 @@ def retrieveSeisILSliceFrom3DMat(seis3dmat, inlsls=None, seisinfo=None,
     if np.ndim(inlsls) != 1:
         print('ERROR in retrieveSeisILSliceFrom3DMat: 1D array of inline slices expected')
         sys.exit()
-
-    inl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=0)
-    xl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=1)
-    z3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=2)
 
     inlstart = seisinfo['ILStart']
     inlstep = seisinfo['ILStep']
@@ -848,36 +858,36 @@ def retrieveSeisILSliceFrom3DMat(seis3dmat, inlsls=None, seisinfo=None,
     if verbose:
         print('Retrieve ' + str(ninlsls) + ' inline slices')
 
-    seisinl = np.zeros([znum, xlnum, ninlsls], np.float32)
-    seisxl = np.zeros([znum, xlnum, ninlsls], np.float32)
-    seisz = np.zeros([znum, xlnum, ninlsls], np.float32)
     seisdata = np.zeros([znum, xlnum, ninlsls], np.float32)
     for i in range(ninlsls):
         #
         if verbose:
-            sys.stdout.write('\r>>> Process %.1f%%' % (float(i) / float(ninlsls) * 100.0))
+            sys.stdout.write('\r>>> Process %.1f%%' % (float(i+1) / float(ninlsls) * 100.0))
             sys.stdout.flush()
         #
         inl = inlsls[i]
         idx = np.round((inl - inlstart) / inlstep).astype(np.int32)
         if idx >= 0 and idx < inlnum:
-            seisinl[:, :, i] = inl3dmat[:, :, idx]
-            seisxl[:, :, i] = xl3dmat[:, :, idx]
-            seisz[:, :, i] = z3dmat[:, :, idx]
             seisdata[:, :, i] = seis3dmat[:, :, idx]
     #
     if verbose:
         sys.stdout.write(' Done\n')
 
+    seisinl = inlsls
+    seisinl = npmat.repmat(seisinl, znum * xlnum, 1)
     seisinl = seisinl.transpose()
-    seisinl = np.reshape(seisinl, [1, znum * xlnum * ninlsls])
-    seisinl = seisinl.transpose()
+    seisinl = np.reshape(seisinl, [znum*xlnum*ninlsls, 1])
+    seisxl = seisinfo['XLRange']
+    seisxl = npmat.repmat(seisxl, znum, 1)
     seisxl = seisxl.transpose()
-    seisxl = np.reshape(seisxl, [1, znum * xlnum * ninlsls])
+    seisxl = np.reshape(seisxl, [xlnum * znum, 1])
+    seisxl = npmat.repmat(seisxl, 1, ninlsls)
     seisxl = seisxl.transpose()
-    seisz = seisz.transpose()
-    seisz = np.reshape(seisz, [1, znum * xlnum * ninlsls])
-    seisz = seisz.transpose()
+    seisxl = np.reshape(seisxl, [znum*xlnum*ninlsls, 1])
+    seisz = seisinfo['ZRange']
+    seisz = npmat.repmat(seisz, 1, ninlsls*xlnum)
+    seisz = np.reshape(seisz, [znum*xlnum*ninlsls, 1])
+    #
     seisdata = seisdata.transpose()
     seisdata = np.reshape(seisdata, [1, znum * xlnum * ninlsls])
     seisdata = seisdata.transpose()
@@ -1100,10 +1110,10 @@ def retrieveSeisXLSliceFrom3DMat(seis3dmat, xlsls=None, seisinfo=None,
         print('WARNING in retrieveSeisXLSliceFrom3DMat: Survey info auto-generated from 3D seismic matrix')
         seisinfo = createSeisInfoFrom3DMat(seis3dmat)
 
-    seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
 
     if xlsls is None:
         print('WARNING in retrieveSeisXLSliceFrom3DMat: to retrieve all crossline slices in 3D seismic matrix')
+        seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
         seisloc = seis2dmat[:, 0:3]
         seisdata = seis2dmat[:, 3]
         seisdata = np.reshape(seisdata, [len(seisdata), 1])
@@ -1113,10 +1123,6 @@ def retrieveSeisXLSliceFrom3DMat(seis3dmat, xlsls=None, seisinfo=None,
     if np.ndim(xlsls) != 1:
         print('ERROR in retrieveSeisXLSliceFrom3DMat: 1D array of crossline slices expected')
         sys.exit()
-
-    inl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=0)
-    xl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=1)
-    z3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=2)
 
     xlstart = seisinfo['XLStart']
     xlstep = seisinfo['XLStep']
@@ -1128,36 +1134,36 @@ def retrieveSeisXLSliceFrom3DMat(seis3dmat, xlsls=None, seisinfo=None,
     if verbose:
         print('Retrieve ' + str(nxlsls) + ' crossline slices')
 
-    seisinl = np.zeros([znum, nxlsls, inlnum], np.float32)
-    seisxl = np.zeros([znum, nxlsls, inlnum], np.float32)
-    seisz = np.zeros([znum, nxlsls, inlnum], np.float32)
     seisdata = np.zeros([znum, nxlsls, inlnum], np.float32)
     for i in range(nxlsls):
         #
         if verbose:
-            sys.stdout.write('\r>>> Process %.1f%%' % (float(i) / float(nxlsls) * 100.0))
+            sys.stdout.write('\r>>> Process %.1f%%' % (float(i+1) / float(nxlsls) * 100.0))
             sys.stdout.flush()
         #
         xl = xlsls[i]
         idx = np.round((xl - xlstart) / xlstep).astype(np.int32)
         if idx >= 0 and idx < xlnum:
-            seisinl[:, i, :] = inl3dmat[:, idx, :]
-            seisxl[:, i, :] = xl3dmat[:, idx, :]
-            seisz[:, i, :] = z3dmat[:, idx, :]
             seisdata[:, i, :] = seis3dmat[:, idx, :]
     #
     if verbose:
         sys.stdout.write(' Done\n')
 
+    seisinl = seisinfo['ILRange']
+    seisinl = npmat.repmat(seisinl, znum * nxlsls, 1)
     seisinl = seisinl.transpose()
-    seisinl = np.reshape(seisinl, [1, znum * nxlsls * inlnum])
-    seisinl = seisinl.transpose()
+    seisinl = np.reshape(seisinl, [znum * nxlsls * inlnum, 1])
+    seisxl = xlsls
+    seisxl = npmat.repmat(seisxl, znum, 1)
     seisxl = seisxl.transpose()
-    seisxl = np.reshape(seisxl, [1, znum * nxlsls * inlnum])
+    seisxl = np.reshape(seisxl, [nxlsls * znum, 1])
+    seisxl = npmat.repmat(seisxl, 1, inlnum)
     seisxl = seisxl.transpose()
-    seisz = seisz.transpose()
-    seisz = np.reshape(seisz, [1, znum * nxlsls * inlnum])
-    seisz = seisz.transpose()
+    seisxl = np.reshape(seisxl, [znum * nxlsls * inlnum, 1])
+    seisz = seisinfo['ZRange']
+    seisz = npmat.repmat(seisz, 1, inlnum * nxlsls)
+    seisz = np.reshape(seisz, [znum * nxlsls * inlnum, 1])
+    #
     seisdata = seisdata.transpose()
     seisdata = np.reshape(seisdata, [1, znum * nxlsls * inlnum])
     seisdata = seisdata.transpose()
@@ -1380,10 +1386,9 @@ def retrieveSeisZSliceFrom3DMat(seis3dmat, zsls=None, seisinfo=None,
         print('WARNING in retrieveSeisZSliceFrom3DMat: Survey info auto-generated from 3D seismic matrix')
         seisinfo = createSeisInfoFrom3DMat(seis3dmat)
 
-    seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
-
     if zsls is None:
         print('WARNING in retrieveSeisZSliceFrom3DMat: to retrieve all z slices')
+        seis2dmat = convertSeis3DMatTo2DMat(seis3dmat, seisinfo)
         seisloc = seis2dmat[:, 0:3]
         seisdata = seis2dmat[:, 3]
         seisdata = np.reshape(seisdata, [len(seisdata), 1])
@@ -1393,10 +1398,6 @@ def retrieveSeisZSliceFrom3DMat(seis3dmat, zsls=None, seisinfo=None,
     if np.ndim(zsls) != 1:
         print('ERROR in retrieveSeisZSliceFrom3DMat: 1D array of z slices expected')
         sys.exit()
-
-    inl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=0)
-    xl3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=1)
-    z3dmat = convertSeis2DMatTo3DMat(seis2dmat, datacol=2)
 
     zstart = seisinfo['ZStart']
     zstep = seisinfo['ZStep']
@@ -1408,36 +1409,36 @@ def retrieveSeisZSliceFrom3DMat(seis3dmat, zsls=None, seisinfo=None,
     if verbose:
         print('Retrieve ' + str(nzsls) + ' z slices')
 
-    seisinl = np.zeros([nzsls, xlnum, inlnum], np.float32)
-    seisxl = np.zeros([nzsls, xlnum, inlnum], np.float32)
-    seisz = np.zeros([nzsls, xlnum, inlnum], np.float32)
     seisdata = np.zeros([nzsls, xlnum, inlnum], np.float32)
     for i in range(nzsls):
         #
         if verbose:
-            sys.stdout.write('\r>>> Process %.1f%%' % (float(i) / float(nzsls) * 100.0))
+            sys.stdout.write('\r>>> Process %.1f%%' % (float(i+1) / float(nzsls) * 100.0))
             sys.stdout.flush()
         #
         z = zsls[i]
         idx = np.round((z - zstart) / zstep).astype(np.int32)
         if idx >= 0 and idx < znum:
-            seisinl[i, :, :] = inl3dmat[idx, :, :]
-            seisxl[i, :, :] = xl3dmat[idx, :, :]
-            seisz[i, :, :] = z3dmat[idx, :, :]
             seisdata[i, :, :] = seis3dmat[idx, :, :]
     #
     if verbose:
         sys.stdout.write(' Done\n')
 
+    seisinl = seisinfo['ILRange']
+    seisinl = npmat.repmat(seisinl, nzsls * xlnum, 1)
     seisinl = seisinl.transpose()
-    seisinl = np.reshape(seisinl, [1, nzsls * xlnum * inlnum])
-    seisinl = seisinl.transpose()
+    seisinl = np.reshape(seisinl, [nzsls * xlnum * inlnum, 1])
+    seisxl = seisinfo['XLRange']
+    seisxl = npmat.repmat(seisxl, nzsls, 1)
     seisxl = seisxl.transpose()
-    seisxl = np.reshape(seisxl, [1, nzsls * xlnum * inlnum])
+    seisxl = np.reshape(seisxl, [xlnum * nzsls, 1])
+    seisxl = npmat.repmat(seisxl, 1, inlnum)
     seisxl = seisxl.transpose()
-    seisz = seisz.transpose()
-    seisz = np.reshape(seisz, [1, nzsls * xlnum * inlnum])
-    seisz = seisz.transpose()
+    seisxl = np.reshape(seisxl, [nzsls * xlnum * inlnum, 1])
+    seisz = zsls
+    seisz = npmat.repmat(seisz, 1, inlnum * xlnum)
+    seisz = np.reshape(seisz, [nzsls * xlnum * inlnum, 1])
+    #
     seisdata = seisdata.transpose()
     seisdata = np.reshape(seisdata, [1, nzsls * xlnum * inlnum])
     seisdata = seisdata.transpose()
@@ -2100,6 +2101,48 @@ def convertIJKToIXZ(ijk, inlstart=0, inlstep=1, xlstart=0, xlstep=1, zstart=0, z
     return ixz
 
 
+def getRandomSample(inl, xl, z, nsample=1000):
+    """
+    Get samples randomly
+    Params:
+        inl:        a list of inline sections
+        xl:         a list of crossline section
+        z:          a list of z sections
+        nsample:    number of samples expected
+    Return:
+         2D matrix with each row representing a sample
+    """
+    inlnum = len(inl)
+    xlnum = len(xl)
+    znum = len(z)
+    #
+    seeds = np.zeros([nsample, 3])
+    #
+    # get seed
+    all_point = np.arange(0, znum*xlnum*inlnum)
+    np.random.shuffle(all_point)
+    seed_idx = all_point[0:nsample]
+    #
+    # add inline
+    inl = np.matlib.repmat(inl, znum * xlnum, 1)
+    inl = inl.transpose()
+    inl = np.reshape(inl, [znum * xlnum * inlnum, 1])
+    seeds[:, 0:1] = inl[seed_idx, 0:1]
+    xl = np.matlib.repmat(xl, znum, 1)
+    xl = xl.transpose()
+    xl = np.reshape(xl, [xlnum * znum, 1])
+    xl = np.matlib.repmat(xl, 1, inlnum)
+    xl = xl.transpose()
+    xl = np.reshape(xl, [znum * xlnum * inlnum, 1])
+    seeds[:, 1:2] = xl[seed_idx, 0:1]
+    # add z
+    z = np.matlib.repmat(z, 1, xlnum*inlnum)
+    z = np.reshape(z, [znum*xlnum*inlnum, 1])
+    seeds[:, 2:3] = z[seed_idx, 0:1]
+    #
+    return seeds
+
+
 class analysis:
     # pack all functions as a class
     #
@@ -2107,6 +2150,9 @@ class analysis:
     #
     checkSeisInfo = checkSeisInfo
     makeSeisInfo = makeSeisInfo
+    #
+    isSeis2DMatConsistentWithSeisInfo = isSeis2DMatConsistentWithSeisInfo
+    isSeis3DMatConsistentWithSeisInfo = isSeis3DMatConsistentWithSeisInfo
     #
     createSeisInfoFrom3DMat = createSeisInfoFrom3DMat
     convertSeis2DMatTo3DMat = convertSeis2DMatTo3DMat
@@ -2139,4 +2185,6 @@ class analysis:
     isOutOfSurvey = isOutOfSurvey
     convertIXZToIJK = convertIXZToIJK
     convertIJKToIXZ = convertIJKToIXZ
+    #
+    getRandomSample = getRandomSample
 

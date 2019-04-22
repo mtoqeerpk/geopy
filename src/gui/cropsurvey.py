@@ -1,6 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -158,7 +159,7 @@ class cropsurvey(object):
         self.lblzitvl.setText(_translate("CropSurvey", "X"))
         self.cbbzitvl.addItems([str(i + 1) for i in range(100)])
         #
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _survinfo = self.survinfo
             self.ldtinlstart.setText(_translate("CropSurvey", str(_survinfo['ILStart'])))
             self.ldtinlend.setText(_translate("CropSurvey", str(_survinfo['ILEnd'])))
@@ -245,20 +246,33 @@ class cropsurvey(object):
                           self.cbbzitvl.currentIndex() + 1, dtype=int)
         _idx = np.zeros([len(_inlidx), len(_xlidx), len(_zidx)])
         # survinfo
-        self.survinfo = seis_ays.createSeisInfoFrom3DMat(np.transpose(_idx, [2, 1, 0]),
-                                                         inlstart=_inlstart_idx*_survinfo['ILStep']+_survinfo['ILStart'],
-                                                         inlstep=(self.cbbinlitvl.currentIndex()+1)*_survinfo['ILStep'],
-                                                         xlstart=_xlstart_idx*_survinfo['XLStep']+_survinfo['XLStart'],
-                                                         xlstep=(self.cbbxlitvl.currentIndex()+1)*_survinfo['XLStep'],
-                                                         zstart=_zstart_idx*_survinfo['ZStep']+_survinfo['ZStart'],
-                                                         zstep=(self.cbbzitvl.currentIndex()+1)*_survinfo['ZStep'])
+        _survinfo = seis_ays.createSeisInfoFrom3DMat(np.transpose(_idx, [2, 1, 0]),
+                                                     inlstart=_inlstart_idx * self.survinfo['ILStep'] +
+                                                              self.survinfo['ILStart'],
+                                                     inlstep=(self.cbbinlitvl.currentIndex() + 1) *
+                                                             self.survinfo['ILStep'],
+                                                     xlstart=_xlstart_idx * self.survinfo['XLStep'] +
+                                                             self.survinfo['XLStart'],
+                                                     xlstep=(self.cbbxlitvl.currentIndex() + 1) *
+                                                            self.survinfo['XLStep'],
+                                                     zstart=_zstart_idx * self.survinfo['ZStep'] +
+                                                            self.survinfo['ZStart'],
+                                                     zstep=(self.cbbzitvl.currentIndex() + 1) *
+                                                           self.survinfo['ZStep']
+                                                     )
         # seisdata
         for i in range(len(_inlidx)):
             for j in range(len(_xlidx)):
-                _idx[i, j, :] = _zidx + _xlidx[j] * _survinfo['ZNum'] + _inlidx[i] * _survinfo['XLNum'] * _survinfo['ZNum']
+                _idx[i, j, :] = _zidx + _xlidx[j] * self.survinfo['ZNum'] + \
+                                _inlidx[i] * self.survinfo['XLNum'] * self.survinfo['ZNum']
         _idx = np.reshape(_idx, [len(_zidx) * len(_xlidx) * len(_inlidx)])
-        if (self.seisdata is not None) and len(self.seisdata.keys()) > 0:
-            self.seisdata = basic_mdt.retrieveDictByIndex(self.seisdata, _idx)
+        for key in self.seisdata.keys():
+            if self.checkSeisData(key):
+                _dict = {}
+                _dict[key] = self.seisdata[key]
+                self.seisdata[key] = basic_mdt.retrieveDictByIndex(_dict, _idx)[key]
+        #
+        self.survinfo = _survinfo
         #
         QtWidgets.QMessageBox.information(self.msgbox,
                                           "Crop Survey",
@@ -283,17 +297,10 @@ class cropsurvey(object):
             return False
         return True
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("CropSurvey: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Crop Survey',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":

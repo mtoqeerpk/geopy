@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -112,14 +112,15 @@ class exportseisimageset(object):
         _translate = QtCore.QCoreApplication.translate
         ExportSeisImageSet.setWindowTitle(_translate("ExportSeisImageSet", "Export Seismic ImageSet"))
         self.lblattrib.setText(_translate("ExportSeisImageSet", "Select output properties:"))
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _firstattrib = None
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgattrib)
-                item.setText(_translate("ExportSeisImageSet", i))
-                self.lwgattrib.addItem(item)
-                if _firstattrib is None:
-                    _firstattrib = item
+                if self.checkSeisData(i):
+                    item = QtWidgets.QListWidgetItem(self.lwgattrib)
+                    item.setText(_translate("ExportSeisImageSet", i))
+                    self.lwgattrib.addItem(item)
+                    if _firstattrib is None:
+                        _firstattrib = item
             self.lwgattrib.setCurrentItem(_firstattrib)
         self.lbltype.setText(_translate("ExportSeisImageSet", "Select orientation:"))
         self.cbbtype.addItems(['Inline', 'Crossline', 'Time/depth'])
@@ -273,17 +274,10 @@ class exportseisimageset(object):
         return True
 
 
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ExportSeisImageSet: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Export Seismic ImageSet',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 

@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -206,7 +206,7 @@ class managesurvey(object):
 
 
     def refreshSeisInfo(self):
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if (self.checkSurvInfo() is True):
             _seisinfo = self.survinfo
             self.ldtinlstart.setText(str(_seisinfo['ILStart']))
             self.ldtinlend.setText(str(_seisinfo['ILEnd']))
@@ -238,20 +238,6 @@ class managesurvey(object):
             #                                'Survey not found')
             return False
         return True
-
-
-    def checkSeisData(self):
-        self.refreshMsgBox()
-        #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ManageSurvey: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Manage Survey',
-                #                                'Seismic & survey not match')
-                return False
-        return True
-
 
 
 if __name__ == "__main__":

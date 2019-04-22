@@ -1,7 +1,7 @@
 #############################################################################################
 #                                                                                           #
-# Author:   Haibin Di                                                                       #
-# Date:     March 2018                                                                      #
+# Author:       Haibin Di                                                                   #
+# Last updated: March 2019                                                                  #
 #                                                                                           #
 #############################################################################################
 
@@ -90,14 +90,15 @@ class exportseissegy(object):
         _translate = QtCore.QCoreApplication.translate
         ExportSeisSegy.setWindowTitle(_translate("ExportSeisSegy", "Export Seismic SEG-Y"))
         self.lblattrib.setText(_translate("ExportSeisSegy", "Select output properties:"))
-        if (self.checkSurvInfo() is True) and (self.checkSeisData() is True):
+        if self.checkSurvInfo() is True:
             _firstattrib = None
             for i in sorted(self.seisdata.keys()):
-                item = QtWidgets.QListWidgetItem(self.lwgattrib)
-                item.setText(_translate("ExportSeisSegy", i))
-                self.lwgattrib.addItem(item)
-                if _firstattrib is None:
-                    _firstattrib = item
+                if self.checkSeisData(i):
+                    item = QtWidgets.QListWidgetItem(self.lwgattrib)
+                    item.setText(_translate("ExportSeisSegy", i))
+                    self.lwgattrib.addItem(item)
+                    if _firstattrib is None:
+                        _firstattrib = item
             self.lwgattrib.setCurrentItem(_firstattrib)
         self.lblsurvey.setText(_translate("ExportSeisSegy", "Setup output survey:"))
         self.rdbsurveynew.setText(_translate("ExportSeisSegy", "from input data dimensions"))
@@ -231,17 +232,10 @@ class exportseissegy(object):
         return True
         
         
-    def checkSeisData(self):
+    def checkSeisData(self, f):
         self.refreshMsgBox()
         #
-        for f in self.seisdata.keys():
-            if np.shape(self.seisdata[f])[0] != self.survinfo['SampleNum']:
-                # print("ExportSeisSegy: Seismic & survey not match")
-                # QtWidgets.QMessageBox.critical(self.msgbox,
-                #                                'Export Seismic SEG-Y',
-                #                                'Seismic & survey not match')
-                return False
-        return True
+        return seis_ays.isSeis2DMatConsistentWithSeisInfo(self.seisdata[f], self.survinfo)
 
 
 if __name__ == "__main__":
