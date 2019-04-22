@@ -46,7 +46,7 @@ def readSeisDataFromSegy(segyfile, seisinfo, traceheaderformat=TraceHeaderRev1, 
         binary_header = syreader.read_binary_reel_header(sid, endian=endian)
         databyte = dataformat[binary_header.data_sample_format - 1]
         #
-        pos = 3200 + 400
+        pos = np.int64(3200 + 400)
         if qpgsdlg is not None:
             qpgsdlg.setMaximum(inlnum*xlnum)
         for itrace in dat.trace_indexes():
@@ -380,7 +380,7 @@ def readSeis3DMatFromSegyNoInfo(segyfile, traceheaderformat=TraceHeaderRev1, end
         seisdata = np.zeros([znum, xlnum, inlnum])
         traceflag = np.zeros([xlnum, inlnum])
         #
-        pos = 3200 + 400
+        pos = np.int64(3200 + 400)
         if qpgsdlg is not None:
             qpgsdlg.setMaximum(inlnum * xlnum)
         for itrace in dat.trace_indexes():
@@ -1050,7 +1050,7 @@ def readSegyTraceHeader(segyfile, traceidx=0, traceheaderformat=TraceHeaderRev1,
         sys.exit()
     #
     traceheaderpacker = sypacker.HeaderPacker(traceheaderformat, endian)
-    pos = 3200 + 400
+    pos = np.int64(3200 + 400)
     dataformat = np.array([4, 4, 2, 4, 4, 0, 0, 1])
     with open(segyfile, 'rb') as sid:
         databyte = syreader.read_binary_reel_header(sid, endian=endian)
