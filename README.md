@@ -1,5 +1,5 @@
 # ![](https://github.com/geopyteam/geopy/blob/master/logo.png)
-# GeoPy aims at facilitating seismic data analysis in Python, particularly to fully utilize the state-of-the-art artificial intelligence techniques
+# GeoPy aims at facilitating seismic data analysis in Python.
 # To run it, simply
 #     1. download and unzip the codes to be searchable by your python path
 #     2. check dependecy.txt to ensure all required packages installed already, particularly PyQt5; otherwise, install them by pip install package-name
